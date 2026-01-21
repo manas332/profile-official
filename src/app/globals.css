@@ -5,11 +5,72 @@
   --foreground: #171717;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Custom Amber Color Palette - Lighter Shades */
+  --color-amber-lightest: #FCE181;
+  --color-amber-lighter: #FCD575;
+  --color-amber-light: #FCCC6B;
+  --color-amber-medium: #FBC463;
+  --color-amber-medium-dark: #FBBF5D;
+  --color-amber-dark: #FBBB59;
+  --color-amber-darker: #FBB856;
+
+  /* Darker "ink" tone for readable text on light ambers */
+  --color-amber-ink: #6B3F00;
+}
+
+/* Ensure amber colors are available as Tailwind utilities */
+@layer utilities {
+  .bg-amber-lightest { background-color: var(--color-amber-lightest); }
+  .bg-amber-lighter { background-color: var(--color-amber-lighter); }
+  .bg-amber-light { background-color: var(--color-amber-light); }
+  .bg-amber-medium { background-color: var(--color-amber-medium); }
+  .bg-amber-medium-dark { background-color: var(--color-amber-medium-dark); }
+  .bg-amber-dark { background-color: var(--color-amber-dark); }
+  .bg-amber-darker { background-color: var(--color-amber-darker); }
+  
+  .text-amber-lightest { color: var(--color-amber-lightest); }
+  .text-amber-lighter { color: var(--color-amber-lighter); }
+  .text-amber-light { color: var(--color-amber-light); }
+  .text-amber-medium { color: var(--color-amber-medium); }
+  .text-amber-medium-dark { color: var(--color-amber-medium-dark); }
+  .text-amber-dark { color: var(--color-amber-dark); }
+  .text-amber-darker { color: var(--color-amber-darker); }
+  .text-amber-ink { color: var(--color-amber-ink); }
+  
+  .border-amber-lightest { border-color: var(--color-amber-lightest); }
+  .border-amber-lighter { border-color: var(--color-amber-lighter); }
+  .border-amber-light { border-color: var(--color-amber-light); }
+  .border-amber-medium { border-color: var(--color-amber-medium); }
+  .border-amber-medium-dark { border-color: var(--color-amber-medium-dark); }
+  .border-amber-dark { border-color: var(--color-amber-dark); }
+  .border-amber-darker { border-color: var(--color-amber-darker); }
+  .border-amber-ink { border-color: var(--color-amber-ink); }
+
+  /* Black "border" for white text on bright gradients */
+  .text-outline-black {
+    text-shadow:
+      -1px -1px 0 rgba(0,0,0,0.85),
+       1px -1px 0 rgba(0,0,0,0.85),
+      -1px  1px 0 rgba(0,0,0,0.85),
+       1px  1px 0 rgba(0,0,0,0.85),
+       0px  2px 6px rgba(0,0,0,0.35);
+  }
+
+  .text-outline-black-all,
+  .text-outline-black-all * {
+    text-shadow:
+      -1px -1px 0 rgba(0,0,0,0.85),
+       1px -1px 0 rgba(0,0,0,0.85),
+      -1px  1px 0 rgba(0,0,0,0.85),
+       1px  1px 0 rgba(0,0,0,0.85),
+       0px  2px 6px rgba(0,0,0,0.35);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
