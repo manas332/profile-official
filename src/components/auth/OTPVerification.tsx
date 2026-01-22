@@ -78,8 +78,26 @@ export default function OTPVerification({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Verification failed");
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Verification failed";
+        
+        if (contentType && contentType.includes("application/json")) {
+          try {
+            const data = await response.json();
+            errorMessage = data.error || errorMessage;
+          } catch (parseError) {
+            console.error("Failed to parse error response:", parseError);
+            errorMessage = `Server error (${response.status}). Please try again.`;
+          }
+        } else {
+          // Response is not JSON (likely HTML error page)
+          const text = await response.text();
+          console.error("Non-JSON error response:", text.substring(0, 100));
+          errorMessage = `Server error (${response.status}). Please try again.`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       router.push("/astro");

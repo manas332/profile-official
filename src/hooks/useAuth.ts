@@ -12,11 +12,19 @@ export function useAuth() {
     const checkSession = async () => {
       try {
         const response = await fetch("/api/auth/session");
-        const data = await response.json();
         
-        if (data.authenticated && data.user) {
-          setUser(data.user);
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          
+          if (data.authenticated && data.user) {
+            setUser(data.user);
+          } else {
+            setUser(null);
+          }
         } else {
+          // Response is not JSON, treat as unauthenticated
           setUser(null);
         }
       } catch (error) {

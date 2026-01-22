@@ -47,13 +47,31 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          // If user doesn't exist, suggest signup
-          if (response.status === 404 || data.error?.includes("not found") || data.error?.includes("No account")) {
-            setError(`No account found with this email. Click here to sign up.`);
-            return;
+          // Check if response is JSON before parsing
+          const contentType = response.headers.get("content-type");
+          let errorMessage = "Login failed";
+          
+          if (contentType && contentType.includes("application/json")) {
+            try {
+              const data = await response.json();
+              errorMessage = data.error || errorMessage;
+              // If user doesn't exist, suggest signup
+              if (response.status === 404 || data.error?.includes("not found") || data.error?.includes("No account")) {
+                setError(`No account found with this email. Click here to sign up.`);
+                return;
+              }
+            } catch (parseError) {
+              console.error("Failed to parse error response:", parseError);
+              errorMessage = `Server error (${response.status}). Please try again.`;
+            }
+          } else {
+            // Response is not JSON (likely HTML error page)
+            const text = await response.text();
+            console.error("Non-JSON error response:", text.substring(0, 100));
+            errorMessage = `Server error (${response.status}). Please try again.`;
           }
-          throw new Error(data.error || "Login failed");
+          
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
@@ -71,15 +89,33 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          // If server suggests redirect, show error with link
-          if (data.shouldRedirect && data.redirectTo) {
-            const errorMsg = data.error || "Account issue detected";
-            setError(`${errorMsg} Click here to ${data.redirectTo === "/signup" ? "sign up" : "login"}.`);
-            setSuccessMessage(null);
-            return; // Don't throw, just return early
+          // Check if response is JSON before parsing
+          const contentType = response.headers.get("content-type");
+          let errorMessage = "Failed to send OTP";
+          
+          if (contentType && contentType.includes("application/json")) {
+            try {
+              const data = await response.json();
+              errorMessage = data.error || errorMessage;
+              // If server suggests redirect, show error with link
+              if (data.shouldRedirect && data.redirectTo) {
+                const errorMsg = data.error || "Account issue detected";
+                setError(`${errorMsg} Click here to ${data.redirectTo === "/signup" ? "sign up" : "login"}.`);
+                setSuccessMessage(null);
+                return; // Don't throw, just return early
+              }
+            } catch (parseError) {
+              console.error("Failed to parse error response:", parseError);
+              errorMessage = `Server error (${response.status}). Please try again.`;
+            }
+          } else {
+            // Response is not JSON (likely HTML error page)
+            const text = await response.text();
+            console.error("Non-JSON error response:", text.substring(0, 100));
+            errorMessage = `Server error (${response.status}). Please try again.`;
           }
-          throw new Error(data.error || "Failed to send OTP");
+          
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
