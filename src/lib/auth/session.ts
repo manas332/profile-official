@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { User } from "@/types/auth";
 
 const SESSION_COOKIE_NAME = "astro_session";
-const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+const SESSION_MAX_AGE = 60 * 60 * 24 * 10; // 10 days
 
 export interface SessionData {
   user: User;

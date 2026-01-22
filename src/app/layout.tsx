@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pandit Sharma - Expert Vedic Astrologer | AstroConsult",
+  title: "Pandit Sharma - Expert Vedic Astrologer | Humara Pandit",
   description: "Get personalized astrological guidance from Pandit Sharma. Expert in Kundli reading, gemstone consultation, and Vedic astrology with 15 years of experience.",
 };
 

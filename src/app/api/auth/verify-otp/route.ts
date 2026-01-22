@@ -33,22 +33,55 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if user already exists
+      // Check if user already exists in Firestore
       const existingUser = await getUserByEmail(validated.email);
       if (existingUser) {
         return NextResponse.json(
-          { error: "User already exists" },
+          { error: "User already exists. Please login instead." },
           { status: 400 }
         );
       }
 
-      // Create user with email/password
-      const firebaseUser = await signUpWithEmail(
-        validated.email,
-        password,
-        name
-      );
+      // Try to create user with email/password
+      let firebaseUser;
+      try {
+        firebaseUser = await signUpWithEmail(
+          validated.email,
+          password,
+          name
+        );
+      } catch (authError: any) {
+        // If email already exists in Firebase Auth (but not in Firestore), try to sign in instead
+        if (authError.code === "auth/email-already-in-use") {
+          try {
+            firebaseUser = await signInWithEmail(validated.email, password);
+            // User exists in Auth, create Firestore record if missing
+            let user = await getUser(firebaseUser.uid);
+            if (!user) {
+              user = convertFirebaseUserToUser(firebaseUser);
+              if (name) {
+                user.name = name;
+              }
+              await createUser(user);
+            }
+            const token = await firebaseUser.getIdToken();
+            await createSession(user, token);
+            return NextResponse.json({ success: true, user });
+          } catch (signInError: any) {
+            // Password might be wrong, or other error
+            if (signInError.code === "auth/invalid-credential" || signInError.code === "auth/wrong-password") {
+              return NextResponse.json(
+                { error: "Email already registered. Please login with your password." },
+                { status: 400 }
+              );
+            }
+            throw signInError;
+          }
+        }
+        throw authError;
+      }
 
+      // New user created successfully
       const user = convertFirebaseUserToUser(firebaseUser);
       await createUser(user);
 

@@ -30,13 +30,13 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-gray-400">
-              <li>Email: contact@astroconsult.com</li>
+              <li>Email: contact@humarapandit.com</li>
               <li>Phone: +91 98765 43210</li>
             </ul>
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2026 AstroConsult. All rights reserved.</p>
+          <p>&copy; 2026 Humara Pandit. All rights reserved.</p>
         </div>
       </div>
     </footer>

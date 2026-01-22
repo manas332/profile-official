@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { getSession } from "@/lib/auth/session";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import EmailAuthForm from "@/components/auth/EmailAuthForm";
 
 export default async function LoginPage() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("session_token");
+  const session = await getSession();
 
   // If already logged in, redirect to astro
-  if (sessionToken) {
+  if (session) {
     redirect("/astro");
   }
 

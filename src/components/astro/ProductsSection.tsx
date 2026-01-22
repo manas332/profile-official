@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 
 interface Product {
@@ -37,17 +40,28 @@ const products: Product[] = [
 
 export default function ProductsSection() {
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16">
-      <div className="text-center mb-12">
+    <section className="max-w-7xl mx-auto px-6 pt-8 pb-8">
+      <motion.div 
+        className="text-center mb-12"
+        initial={{ opacity: 0, y: -20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         <h2 className="text-4xl font-bold text-gray-900 mb-4">Sacred Products</h2>
         <p className="text-xl text-gray-600">Authentic gemstones and spiritual items</p>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6 mb-12">
         {products.map((product, index) => (
-          <div
+          <motion.div
             key={index}
-            className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all"
+            className="bg-white rounded-2xl overflow-hidden shadow-lg"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
+            whileHover={{ scale: 1.05, shadow: "xl" }}
           >
             <div className="relative overflow-hidden bg-linear-to-br from-amber-lightest to-amber-lighter h-28 sm:h-32 md:h-40">
               <Image
@@ -64,15 +78,21 @@ export default function ProductsSection() {
               <p className="text-sm text-gray-600 mb-2">{product.description}</p>
               <p className="text-base md:text-lg font-bold text-amber-ink">{product.price}</p>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
-      <div className="text-center">
+      <motion.div 
+        className="text-center"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      >
         <Button variant="primary" size="lg">
           Browse All Products
         </Button>
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -2,6 +2,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 
 interface Package {
@@ -54,22 +55,33 @@ export default function ConsultationPackages() {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16">
-      <div className="text-center mb-12">
+    <section id="consultation-packages" className="max-w-7xl mx-auto px-6 pt-8 pb-8">
+      <motion.div 
+        className="text-center mb-12"
+        initial={{ opacity: 0, y: -20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         <h2 className="text-4xl font-bold text-gray-900 mb-4">Consultation Packages</h2>
         <p className="text-xl text-gray-600">Choose the session duration that works best for you</p>
-      </div>
+      </motion.div>
 
       {isDesktop ? (
         <div className="grid md:grid-cols-3 gap-8">
           {packages.map((pkg, index) => (
-            <div
+            <motion.div
               key={index}
               className={`bg-white rounded-2xl p-8 border-2 ${
                 pkg.popular
-                  ? "bg-linear-to-br from-amber-light to-amber-medium text-white text-outline-black-all shadow-2xl transform hover:scale-105 relative"
-                  : "border-amber-light hover:border-amber-medium transition-all shadow-lg hover:shadow-xl"
+                  ? "bg-linear-to-br from-amber-light to-amber-medium text-white text-outline-black-all shadow-2xl relative"
+                  : "border-amber-light shadow-lg"
               }`}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
             >
               {pkg.popular && (
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-medium-dark text-white text-outline-black px-6 py-1 rounded-full text-sm font-semibold z-20 shadow-md">
@@ -114,19 +126,23 @@ export default function ConsultationPackages() {
                   Select Plan
                 </Button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {packages.map((pkg, index) => (
-            <details
+            <motion.details
               key={index}
               className={`group bg-white rounded-2xl border-2 overflow-hidden mx-auto w-full max-w-sm ${
                 pkg.popular
                   ? "bg-linear-to-br from-amber-light to-amber-medium text-white text-outline-black-all shadow-2xl relative"
-                  : "border-amber-light hover:border-amber-medium transition-all shadow-lg hover:shadow-xl"
+                  : "border-amber-light shadow-lg"
               }`}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               {pkg.popular && (
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-medium-dark text-white text-outline-black px-6 py-1 rounded-full text-sm font-semibold z-20 shadow-md">
@@ -200,7 +216,7 @@ export default function ConsultationPackages() {
                   </Button>
                 </div>
               </div>
-            </details>
+            </motion.details>
           ))}
         </div>
       )}

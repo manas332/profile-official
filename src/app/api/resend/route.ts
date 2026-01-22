@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emailSchema } from "@/schemas/auth";
 import { sendOTPEmail } from "@/lib/resend/client";
-import { saveOTP } from "@/lib/firebase/firestore";
+import { saveOTP, getUserByEmail } from "@/lib/firebase/firestore";
 import { generateOTP } from "@/lib/utils/helpers";
 
 export async function POST(request: NextRequest) {
@@ -10,6 +10,21 @@ export async function POST(request: NextRequest) {
     const { email, purpose = "signup" } = body;
 
     const validated = emailSchema.parse({ email });
+
+    // Only signup uses OTP now, so check if user already exists
+    if (purpose === "signup") {
+      const existingUser = await getUserByEmail(validated.email);
+      if (existingUser) {
+        return NextResponse.json(
+          { 
+            error: "Email already registered. Please login instead.",
+            shouldRedirect: true,
+            redirectTo: "/login"
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     // Generate OTP
     const otp = generateOTP();
