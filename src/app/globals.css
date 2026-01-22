@@ -91,6 +91,15 @@
   .border-amber-darker { border-color: var(--color-amber-darker); }
   .border-amber-ink { border-color: var(--color-amber-ink); }
 
+  /* Custom gradient utilities - work with Tailwind's from-* and to-* classes */
+  .bg-linear-to-r {
+    background-image: linear-gradient(to right, var(--tw-gradient-from), var(--tw-gradient-to));
+  }
+  
+  .bg-linear-to-br {
+    background-image: linear-gradient(to bottom right, var(--tw-gradient-from), var(--tw-gradient-to));
+  }
+
   /* Black "border" for white text on bright gradients */
   .text-outline-black {
     text-shadow:

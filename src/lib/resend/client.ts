@@ -57,7 +57,6 @@ export async function sendOTPEmail(email: string, otp: string, purpose: "signup"
     }
 
     console.log("OTP email sent successfully to:", email);
-    return result;
   } catch (error: any) {
     console.error("Error sending OTP email:", error);
     if (error.message?.includes("rate_limit") || error.message?.includes("rate limit")) {
