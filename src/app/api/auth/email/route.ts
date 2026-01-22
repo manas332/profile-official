@@ -38,21 +38,41 @@ export async function POST(request: NextRequest) {
     } else if (action === "login") {
       const validated = loginSchema.parse(data);
       
-      const firebaseUser = await signInWithEmail(
-        validated.email,
-        validated.password
-      );
+      // Try to sign in with Firebase Auth first (this is the source of truth)
+      try {
+        const firebaseUser = await signInWithEmail(
+          validated.email,
+          validated.password
+        );
 
-      let user = await getUser(firebaseUser.uid);
-      if (!user) {
-        user = convertFirebaseUserToUser(firebaseUser);
-        await createUser(user);
+        // User authenticated successfully, check/create Firestore record
+        let user = await getUser(firebaseUser.uid);
+        if (!user) {
+          // User exists in Auth but not in Firestore - create Firestore record
+          user = convertFirebaseUserToUser(firebaseUser);
+          await createUser(user);
+        }
+
+        const token = await firebaseUser.getIdToken();
+        await createSession(user, token);
+
+        return NextResponse.json({ success: true, user });
+      } catch (authError: any) {
+        // Handle Firebase Auth errors
+        if (authError.code === "auth/user-not-found" || authError.code === "auth/invalid-credential") {
+          return NextResponse.json(
+            { error: "No account found with this email. Please sign up instead." },
+            { status: 404 }
+          );
+        }
+        if (authError.code === "auth/wrong-password") {
+          return NextResponse.json(
+            { error: "Invalid email or password" },
+            { status: 401 }
+          );
+        }
+        throw authError;
       }
-
-      const token = await firebaseUser.getIdToken();
-      await createSession(user, token);
-
-      return NextResponse.json({ success: true, user });
     } else {
       return NextResponse.json(
         { error: "Invalid action" },

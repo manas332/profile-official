@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import OTPVerification from "./OTPVerification";
 
@@ -9,6 +10,7 @@ interface EmailAuthFormProps {
 }
 
 export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -30,31 +32,71 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
     try {
       setLoading(true);
 
-      // Send OTP
-      const response = await fetch("/api/resend", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, purpose: mode }),
-      });
+      if (mode === "login") {
+        // For login: Direct email/password check (no OTP)
+        const response = await fetch("/api/auth/email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "login",
+            email,
+            password,
+          }),
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          const data = await response.json();
+          // If user doesn't exist, suggest signup
+          if (response.status === 404 || data.error?.includes("not found") || data.error?.includes("No account")) {
+            setError(`No account found with this email. Click here to sign up.`);
+            return;
+          }
+          throw new Error(data.error || "Login failed");
+        }
+
         const data = await response.json();
-        throw new Error(data.error || "Failed to send OTP");
-      }
+        // Login successful, redirect
+        router.push("/astro");
+        router.refresh();
+      } else {
+        // For signup: Send OTP first
+        const response = await fetch("/api/resend", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, purpose: mode }),
+        });
 
-      const data = await response.json();
-      // Show success message
-      setError(null);
-      setSuccessMessage(data.message || "OTP sent! Please check your email.");
-      setShowOTP(true);
-      
-      // Log for debugging
-      console.log("OTP sent successfully:", data.message);
+        if (!response.ok) {
+          const data = await response.json();
+          // If server suggests redirect, show error with link
+          if (data.shouldRedirect && data.redirectTo) {
+            const errorMsg = data.error || "Account issue detected";
+            setError(`${errorMsg} Click here to ${data.redirectTo === "/signup" ? "sign up" : "login"}.`);
+            setSuccessMessage(null);
+            return; // Don't throw, just return early
+          }
+          throw new Error(data.error || "Failed to send OTP");
+        }
+
+        const data = await response.json();
+        // Show success message
+        setError(null);
+        setSuccessMessage(data.message || "OTP sent! Please check your email.");
+        setShowOTP(true);
+        
+        // Log for debugging
+        console.log("OTP sent successfully:", data.message);
+      }
     } catch (err: any) {
-      console.error("OTP send error:", err);
-      setError(err.message || "Failed to send OTP");
+      console.error("Auth error:", err);
+      // Only set error if we haven't already set one with redirect link
+      if (!error || !error.includes("Click here")) {
+        setError(err.message || (mode === "login" ? "Login failed" : "Failed to send OTP"));
+      }
       setSuccessMessage(null);
     } finally {
       setLoading(false);
@@ -125,8 +167,25 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
 
       {error && (
         <div className="text-sm text-red-600 text-center space-y-1">
-          <p>{error}</p>
-          <p className="text-xs text-gray-500">Please check your email address and try again.</p>
+          <p>
+            {error.includes("Click here") ? (
+              <>
+                {error.split("Click here")[0]}
+                <a
+                  href={error.includes("sign up") ? "/signup" : "/login"}
+                  className="text-blue-600 hover:text-blue-700 font-semibold underline ml-1"
+                >
+                  Click here
+                </a>
+                {error.split("Click here")[1]}
+              </>
+            ) : (
+              error
+            )}
+          </p>
+          {!error.includes("Click here") && (
+            <p className="text-xs text-gray-500">Please check your email address and try again.</p>
+          )}
         </div>
       )}
       
@@ -140,7 +199,7 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
         className="w-full"
         disabled={loading}
       >
-        {loading ? "Sending OTP..." : mode === "signup" ? "Sign Up" : "Login"}
+        {loading ? (mode === "login" ? "Logging in..." : "Sending OTP...") : mode === "signup" ? "Sign Up" : "Login"}
       </Button>
     </form>
   );

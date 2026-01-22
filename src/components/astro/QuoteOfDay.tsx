@@ -1,7 +1,17 @@
+"use client";
+
+import { motion } from "framer-motion";
+
 export default function QuoteOfDay() {
   return (
     <section className="max-w-7xl mx-auto px-6 py-8">
-      <div className="bg-linear-to-r from-amber-lightest via-amber-lighter to-amber-lightest rounded-3xl p-8 md:p-12 border-2 border-amber-light shadow-lg relative overflow-hidden">
+      <motion.div 
+        className="bg-linear-to-r from-amber-lightest via-amber-lighter to-amber-lightest rounded-3xl p-8 md:p-12 border-2 border-amber-light shadow-lg relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-amber-medium/30 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-light/30 rounded-full blur-3xl"></div>
@@ -21,11 +31,17 @@ export default function QuoteOfDay() {
             &ldquo;The stars incline, they do not compel. Wisdom lies in understanding their guidance.&rdquo;
           </p>
           
-          <p className="text-amber-ink font-semibold text-lg">
+          <motion.p 
+            className="text-amber-ink font-semibold text-lg"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
             — Ancient Vedic Wisdom
-          </p>
+          </motion.p>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -20,22 +20,24 @@ export async function sendOTPEmail(email: string, otp: string, purpose: "signup"
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Email Verification</title>
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(to bottom, #FCE181, #FCD575); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #333; margin: 0;">AstroConsult</h1>
-        </div>
-        <div style="background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h2 style="color: #333; margin-top: 0;">Email Verification</h2>
-          <p>Hello,</p>
-          <p>Your OTP for ${purpose === "signup" ? "signing up" : "logging in"} is:</p>
-          <div style="background: #FCE181; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #333; font-size: 32px; letter-spacing: 8px; margin: 0; font-family: monospace;">${otp}</h1>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+        <div style="background: #ffffff; padding: 40px 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #111827; margin: 0; font-size: 24px; font-weight: 600;">Humara Pandit</h1>
           </div>
-          <p>This OTP will expire in 10 minutes.</p>
-          <p>If you didn't request this, please ignore this email.</p>
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #111827; margin-top: 0; margin-bottom: 16px; font-size: 20px; font-weight: 600;">Email Verification</h2>
+            <p style="color: #4b5563; margin: 0 0 16px 0;">Hello,</p>
+            <p style="color: #4b5563; margin: 0 0 24px 0;">Your OTP for ${purpose === "signup" ? "signing up" : "logging in"} is:</p>
+            <div style="background: #f3f4f6; padding: 24px; border-radius: 8px; text-align: center; margin: 24px 0; border: 1px solid #e5e7eb;">
+              <h1 style="color: #111827; font-size: 36px; letter-spacing: 12px; margin: 0; font-family: 'Courier New', monospace; font-weight: 700;">${otp}</h1>
+            </div>
+            <p style="color: #6b7280; margin: 16px 0; font-size: 14px;">This OTP will expire in 10 minutes.</p>
+            <p style="color: #6b7280; margin: 16px 0 0 0; font-size: 14px;">If you didn't request this, please ignore this email.</p>
+          </div>
         </div>
-        <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-          <p>&copy; 2026 AstroConsult. All rights reserved.</p>
+        <div style="text-align: center; margin-top: 24px; color: #9ca3af; font-size: 12px;">
+          <p style="margin: 0;">&copy; 2026 Humara Pandit. All rights reserved.</p>
         </div>
       </body>
     </html>
@@ -43,7 +45,7 @@ export async function sendOTPEmail(email: string, otp: string, purpose: "signup"
 
   try {
     const result = await resend.emails.send({
-      from: "AstroConsult <onboarding@resend.dev>",
+      from: "Humara Pandit <onboarding@resend.dev>",
       to: email,
       subject,
       html,

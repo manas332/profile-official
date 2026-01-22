@@ -1,3 +1,8 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 export default function PanchangCard() {
   // In a real app, this would fetch from an API
   const panchangData = {
@@ -10,41 +15,46 @@ export default function PanchangCard() {
     sunset: "05:48 PM",
   };
 
+  const panchangItems = [
+    { label: "Date", value: panchangData.date },
+    { label: "Tithi", value: panchangData.tithi },
+    { label: "Nakshatra", value: panchangData.nakshatra },
+    { label: "Yoga", value: panchangData.yoga },
+    { label: "Karana", value: panchangData.karana },
+    { label: "Sunrise", value: panchangData.sunrise },
+    { label: "Sunset", value: panchangData.sunset },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-2xl font-bold text-gray-900">Today's Panchang</h3>
-      <div className="bg-gradient-to-br from-amber-lightest to-amber-lighter rounded-2xl p-6 space-y-4 border border-amber-light shadow-lg">
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between pb-3 border-b border-amber-light">
-            <span className="text-gray-600 font-medium">Date</span>
-            <span className="text-gray-900 font-semibold">{panchangData.date}</span>
-          </div>
-          <div className="flex justify-between pb-3 border-b border-amber-light">
-            <span className="text-gray-600 font-medium">Tithi</span>
-            <span className="text-gray-900 font-semibold">{panchangData.tithi}</span>
-          </div>
-          <div className="flex justify-between pb-3 border-b border-amber-light">
-            <span className="text-gray-600 font-medium">Nakshatra</span>
-            <span className="text-gray-900 font-semibold">{panchangData.nakshatra}</span>
-          </div>
-          <div className="flex justify-between pb-3 border-b border-amber-light">
-            <span className="text-gray-600 font-medium">Yoga</span>
-            <span className="text-gray-900 font-semibold">{panchangData.yoga}</span>
-          </div>
-          <div className="flex justify-between pb-3 border-b border-amber-light">
-            <span className="text-gray-600 font-medium">Karana</span>
-            <span className="text-gray-900 font-semibold">{panchangData.karana}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600 font-medium">Sunrise</span>
-            <span className="text-gray-900 font-semibold">{panchangData.sunrise}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600 font-medium">Sunset</span>
-            <span className="text-gray-900 font-semibold">{panchangData.sunset}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <section className="max-w-7xl mx-auto px-6 pt-8 pb-8">
+      <motion.div 
+        className="space-y-4"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <h3 className="text-2xl font-bold text-gray-900">Today's Panchang</h3>
+        <Card className="bg-linear-to-br from-amber-lightest to-amber-lighter border-amber-light shadow-lg">
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-3 text-sm">
+              {panchangItems.map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  className={`flex justify-between ${index < panchangItems.length - 2 ? "pb-3 border-b border-amber-light" : ""}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                >
+                  <span className="text-gray-600 font-medium">{item.label}</span>
+                  <span className="text-gray-900 font-semibold">{item.value}</span>
+                </motion.div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </section>
   );
 }

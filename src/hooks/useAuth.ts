@@ -2,20 +2,32 @@
 
 import { useState, useEffect } from "react";
 import { User } from "@/types/auth";
-import { getSessionClient } from "@/lib/auth/session";
 import { signOut as firebaseSignOut } from "@/lib/firebase/auth";
-import { deleteSession } from "@/lib/auth/session";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const session = getSessionClient();
-    if (session) {
-      setUser(session.user);
-    }
-    setLoading(false);
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        const data = await response.json();
+        
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
   }, []);
 
   const signOut = async () => {
