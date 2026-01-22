@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithGoogle } from "@/lib/firebase/auth";
+import { signInWithRedirect } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
-import Button from "@/components/ui/Button";
 
 export default function GoogleSignInButton() {
   const [loading, setLoading] = useState(false);
@@ -14,30 +13,13 @@ export default function GoogleSignInButton() {
     try {
       setLoading(true);
       setError(null);
-      
-      const user = await signInWithGoogle();
-      const idToken = await user.getIdToken();
-      
-      // Send to backend to create session
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idToken }),
-      });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Authentication failed");
-      }
-
-      router.push("/astro");
-      router.refresh();
+      // Use Amplify's signInWithRedirect for OAuth providers like Google
+      await signInWithRedirect({ provider: "Google" });
+      // Note: User will be redirected to Cognito Hosted UI and back via callback URL
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       setError(err.message || "Failed to sign in with Google");
-    } finally {
       setLoading(false);
     }
   };

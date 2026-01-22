@@ -1,26 +1,69 @@
-import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { NextRequest, NextResponse } from "next/server";
+import { getUserFromIdToken } from "@/lib/aws/cognito";
+import { createUser, getUser } from "@/lib/aws/dynamodb";
+import { createSession, getSession } from "@/lib/auth/session";
 
-export async function GET() {
+// GET: Check existing session
+export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     
-    if (!session) {
+    if (session) {
+      return NextResponse.json({
+        authenticated: true,
+        user: session.user,
+      });
+    }
+    
+    return NextResponse.json({
+      authenticated: false,
+      user: null,
+    });
+  } catch (error: any) {
+    console.error("Session check error:", error);
+    return NextResponse.json({
+      authenticated: false,
+      user: null,
+    });
+  }
+}
+
+// POST: Create/update session from Amplify token
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { idToken } = body;
+
+    if (!idToken) {
       return NextResponse.json(
-        { authenticated: false, user: null },
-        { status: 200 }
+        { error: "ID token is required" },
+        { status: 400 }
       );
     }
 
+    // Get user info from ID token
+    let user = getUserFromIdToken(idToken);
+    
+    // Check/create DynamoDB record
+    let dbUser = await getUser(user.id);
+    if (!dbUser) {
+      await createUser(user);
+      dbUser = user;
+    } else {
+      dbUser = user; // Use user from token for consistency
+    }
+
+    // Create session
+    await createSession(dbUser, idToken);
+
     return NextResponse.json({
       authenticated: true,
-      user: session.user,
-      expiresAt: session.expiresAt,
+      user: dbUser,
     });
-  } catch (error) {
-    console.error("Session check error:", error);
+  } catch (error: any) {
+    console.error("Session creation error:", error);
     return NextResponse.json(
-      { authenticated: false, user: null, error: "Failed to check session" },
+      { error: error.message || "Failed to create session" },
       { status: 500 }
     );
   }

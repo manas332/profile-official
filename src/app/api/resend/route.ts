@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emailSchema } from "@/schemas/auth";
-import { sendOTPEmail } from "@/lib/resend/client";
-import { saveOTP, getUserByEmail } from "@/lib/firebase/firestore";
+import { sendOTPEmail } from "@/lib/aws/ses";
+import { saveOTP, getUserByEmail } from "@/lib/aws/dynamodb";
 import { generateOTP } from "@/lib/utils/helpers";
 
 export async function POST(request: NextRequest) {
@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Save OTP to Firestore first
+    // Save OTP to DynamoDB first
     try {
       await saveOTP(validated.email, otp, expiresAt, purpose as "signup" | "login");
-      console.log("OTP saved to Firestore for:", validated.email);
+      console.log("OTP saved to DynamoDB for:", validated.email);
     } catch (dbError: any) {
-      console.error("Failed to save OTP to Firestore:", dbError);
+      console.error("Failed to save OTP to DynamoDB:", dbError);
       return NextResponse.json(
-        { error: "Failed to save OTP. Please check if Firestore is enabled." },
+        { error: "Failed to save OTP. Please check if DynamoDB tables are created." },
         { status: 500 }
       );
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { signUpWithEmail, signInWithEmail, convertFirebaseUserToUser } from "@/lib/firebase/auth";
-import { createUser, getUser, getUserByEmail } from "@/lib/firebase/firestore";
+import { signUpWithEmail, signInWithEmail } from "@/lib/aws/cognito-server";
+import { getUserFromIdToken } from "@/lib/aws/cognito";
+import { createUser, getUser, getUserByEmail } from "@/lib/aws/dynamodb";
 import { createSession } from "@/lib/auth/session";
 import { signUpSchema, loginSchema } from "@/schemas/auth";
 
@@ -21,51 +22,66 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const firebaseUser = await signUpWithEmail(
+      const cognitoResult = await signUpWithEmail(
         validated.email,
         validated.password,
         validated.name
       );
 
-      const user = convertFirebaseUserToUser(firebaseUser);
+      // Create user in DynamoDB
+      const user: any = {
+        id: cognitoResult.userId,
+        email: cognitoResult.email,
+        name: validated.name,
+        provider: "email",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       await createUser(user);
 
-      // Get ID token for session
-      const token = await firebaseUser.getIdToken();
-      await createSession(user, token);
-
-      return NextResponse.json({ success: true, user });
+      // For Cognito, we need to confirm the user first or use admin to set password
+      // For now, return success - user will need to confirm email if required
+      // In production, you might want to auto-confirm or use admin APIs
+      return NextResponse.json({ 
+        success: true, 
+        user,
+        requiresConfirmation: cognitoResult.requiresConfirmation 
+      });
     } else if (action === "login") {
       const validated = loginSchema.parse(data);
       
-      // Try to sign in with Firebase Auth first (this is the source of truth)
+      // Try to sign in with Cognito
       try {
-        const firebaseUser = await signInWithEmail(
+        const cognitoResult = await signInWithEmail(
           validated.email,
           validated.password
         );
 
-        // User authenticated successfully, check/create Firestore record
-        let user = await getUser(firebaseUser.uid);
-        if (!user) {
-          // User exists in Auth but not in Firestore - create Firestore record
-          user = convertFirebaseUserToUser(firebaseUser);
+        // Get user info from ID token
+        let user = getUserFromIdToken(cognitoResult.idToken);
+        
+        // Check/create DynamoDB record
+        let dbUser = await getUser(user.id);
+        if (!dbUser) {
+          // User exists in Cognito but not in DynamoDB - create DynamoDB record
           await createUser(user);
+          dbUser = user;
+        } else {
+          dbUser = user; // Use user from token for consistency
         }
 
-        const token = await firebaseUser.getIdToken();
-        await createSession(user, token);
+        await createSession(dbUser, cognitoResult.idToken);
 
-        return NextResponse.json({ success: true, user });
+        return NextResponse.json({ success: true, user: dbUser });
       } catch (authError: any) {
-        // Handle Firebase Auth errors
-        if (authError.code === "auth/user-not-found" || authError.code === "auth/invalid-credential") {
+        // Handle Cognito errors
+        if (authError.message?.includes("not found") || authError.message?.includes("User not found")) {
           return NextResponse.json(
             { error: "No account found with this email. Please sign up instead." },
             { status: 404 }
           );
         }
-        if (authError.code === "auth/wrong-password") {
+        if (authError.message?.includes("Invalid email or password") || authError.message?.includes("NotAuthorized")) {
           return NextResponse.json(
             { error: "Invalid email or password" },
             { status: 401 }
@@ -89,14 +105,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
+    if (error.message?.includes("Invalid email or password") || error.message?.includes("NotAuthorized")) {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
       );
     }
 
-    if (error.code === "auth/email-already-in-use") {
+    if (error.message?.includes("Email already in use") || error.message?.includes("UsernameExists")) {
       return NextResponse.json(
         { error: "Email already in use" },
         { status: 400 }
