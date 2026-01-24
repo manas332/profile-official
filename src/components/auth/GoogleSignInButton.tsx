@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithGoogle } from "@/lib/firebase/auth";
 import { useRouter } from "next/navigation";
-import Button from "@/components/ui/Button";
+import {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  storeCodeVerifier,
+} from "@/lib/aws/oauth-pkce";
 
 export default function GoogleSignInButton() {
   const [loading, setLoading] = useState(false);
@@ -14,48 +17,44 @@ export default function GoogleSignInButton() {
     try {
       setLoading(true);
       setError(null);
-      
-      const user = await signInWithGoogle();
-      const idToken = await user.getIdToken();
-      
-      // Send to backend to create session
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idToken }),
-      });
 
-      if (!response.ok) {
-        // Check if response is JSON before parsing
-        const contentType = response.headers.get("content-type");
-        let errorMessage = "Authentication failed";
-        
-        if (contentType && contentType.includes("application/json")) {
-          try {
-            const data = await response.json();
-            errorMessage = data.error || errorMessage;
-          } catch (parseError) {
-            console.error("Failed to parse error response:", parseError);
-            errorMessage = `Server error (${response.status}). Please try again.`;
-          }
-        } else {
-          // Response is not JSON (likely HTML error page)
-          const text = await response.text();
-          console.error("Non-JSON error response:", text.substring(0, 100));
-          errorMessage = `Server error (${response.status}). Please try again.`;
-        }
-        
-        throw new Error(errorMessage);
+      // Manual OAuth flow with PKCE (workaround for Amplify v6 OAuth completion bug)
+      const clientId = process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID;
+      const domain = process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN;
+      const redirectUri = process.env.NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI;
+
+      if (!clientId || !domain || !redirectUri) {
+        throw new Error("Missing Cognito configuration");
       }
 
-      router.push("/astro");
-      router.refresh();
+      // Generate PKCE values
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      const state = generateCodeVerifier().substring(0, 16); // Shorter state
+
+      // Store code_verifier for callback
+      storeCodeVerifier(state, codeVerifier);
+
+      // Build Cognito authorization URL
+      const params = new URLSearchParams({
+        response_type: "code",
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: "openid email profile",
+        state: state,
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+        identity_provider: "Google",
+        prompt: "select_account", // Force account selection screen
+      });
+
+      const authUrl = `https://${domain}/oauth2/authorize?${params.toString()}`;
+      
+      // Redirect to Cognito
+      window.location.href = authUrl;
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       setError(err.message || "Failed to sign in with Google");
-    } finally {
       setLoading(false);
     }
   };

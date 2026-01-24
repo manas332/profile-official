@@ -1,12 +1,38 @@
 # Copy this to .env.local and fill in your values
 
-# Firebase Configuration (ALL must have NEXT_PUBLIC_ prefix)
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
+# AWS Configuration
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
 
-# Resend API Key (NO NEXT_PUBLIC_ prefix - server-side only)
-RESEND_API_KEY=your_resend_api_key_here
+# AWS Cognito
+AWS_COGNITO_USER_POOL_ID=your_pool_id_here
+AWS_COGNITO_CLIENT_ID=your_client_id_here
+AWS_COGNITO_CLIENT_SECRET=your_client_secret_here
+
+# AWS Cognito (Client-side - must have NEXT_PUBLIC_ prefix for Amplify)
+NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID=your_pool_id_here
+NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID=your_client_id_here
+NEXT_PUBLIC_AWS_COGNITO_DOMAIN=your-domain.auth.ap-south-1.amazoncognito.com
+NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI=http://localhost:3000/api/auth/cognito/callback
+NEXT_PUBLIC_AWS_COGNITO_SIGNOUT_URI=http://localhost:3000/login
+NEXT_PUBLIC_AWS_REGION=ap-south-1
+
+# AWS SES
+AWS_SES_FROM_EMAIL=noreply@yourdomain.com
+AWS_SES_REGION=ap-south-1
+
+# DynamoDB Table Names
+AWS_DYNAMODB_USERS_TABLE=users
+AWS_DYNAMODB_OTP_TABLE=otp_codes
+
+# Legacy Firebase Configuration (can be removed after migration)
+# NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+# NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+# NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+# NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+# NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+# NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
+
+# Legacy Resend API Key (can be removed after migration)
+# RESEND_API_KEY=your_resend_api_key_here

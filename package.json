@@ -10,6 +10,14 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-amplify/auth": "^6.17.2",
+    "@aws-amplify/ui-react": "^6.13.2",
+    "@aws-sdk/client-cognito-identity-provider": "^3.972.0",
+    "@aws-sdk/client-dynamodb": "^3.972.0",
+    "@aws-sdk/client-ses": "^3.972.0",
+    "@aws-sdk/lib-dynamodb": "^3.972.0",
+    "amplify": "^0.0.11",
+    "aws-amplify": "^6.15.10",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

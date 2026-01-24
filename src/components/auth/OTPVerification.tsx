@@ -100,6 +100,16 @@ export default function OTPVerification({
         throw new Error(errorMessage);
       }
 
+      const data = await response.json();
+      
+      // If Google user verified via OTP, they need to sign in via Google
+      if (data.requiresGoogleSignIn || (data.message && data.message.includes("sign in via Google"))) {
+        setError(null);
+        // Show success message and redirect to login with Google option
+        router.push("/login?verified=true&provider=google");
+        return;
+      }
+
       router.push("/astro");
       router.refresh();
     } catch (err: any) {
