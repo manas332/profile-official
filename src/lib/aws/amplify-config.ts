@@ -30,7 +30,7 @@ const amplifyConfig = {
           redirectSignIn: [redirectSignIn],
           redirectSignOut: [redirectSignOut],
           responseType: "code" as const,
-          providers: ["Google"],
+          providers: ["Google" as any],
         },
       },
     },

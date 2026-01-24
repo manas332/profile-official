@@ -42,6 +42,10 @@ export async function signUpWithEmail(
       },
     });
 
+    if (!userId) {
+      throw new Error("Failed to get user ID from sign up");
+    }
+
     return {
       userId,
       email,

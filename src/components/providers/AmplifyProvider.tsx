@@ -26,7 +26,7 @@ export default function AmplifyProvider({ children }: { children: React.ReactNod
                   `${window.location.origin}/login`
                 ],
                 responseType: "code" as const,
-                providers: ["Google"],
+                providers: ["Google" as any],
               },
             },
           },

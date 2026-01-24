@@ -4,8 +4,10 @@ import { getUserFromIdToken } from "@/lib/aws/cognito";
 import { createSession as createAppSession } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest) {
+  let idToken: string = "";
   try {
-    const { idToken } = await request.json();
+    const body = await request.json();
+    idToken = body.idToken;
 
     if (!idToken) {
       return NextResponse.json(
