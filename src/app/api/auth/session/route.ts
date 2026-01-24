@@ -46,11 +46,33 @@ export async function POST(request: NextRequest) {
     
     // Check/create DynamoDB record
     let dbUser = await getUser(user.id);
+    
+    // Also check by email in case user exists with different ID
+    if (!dbUser && user.email) {
+      const { getUserByEmail, updateUser } = await import("@/lib/aws/dynamodb");
+      const existingUserByEmail = await getUserByEmail(user.email);
+      if (existingUserByEmail) {
+        dbUser = existingUserByEmail;
+        // Update profile info (can't change primary key id)
+        await updateUser(existingUserByEmail.id, {
+          photoURL: user.photoURL || existingUserByEmail.photoURL,
+          name: user.name || existingUserByEmail.name,
+        });
+        dbUser = { ...existingUserByEmail, photoURL: user.photoURL || existingUserByEmail.photoURL, name: user.name || existingUserByEmail.name };
+      }
+    }
+    
     if (!dbUser) {
       await createUser(user);
       dbUser = user;
     } else {
-      dbUser = user; // Use user from token for consistency
+      // Update user info from token (in case profile changed)
+      const { updateUser } = await import("@/lib/aws/dynamodb");
+      await updateUser(dbUser.id, {
+        photoURL: user.photoURL || dbUser.photoURL,
+        name: user.name || dbUser.name,
+      });
+      dbUser = { ...dbUser, photoURL: user.photoURL || dbUser.photoURL, name: user.name || dbUser.name };
     }
 
     // Create session

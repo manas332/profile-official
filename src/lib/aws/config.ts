@@ -36,7 +36,9 @@ const awsConfig = {
 };
 
 // Initialize AWS clients
-export const sesClient = new SESClient(awsConfig);
+const sesClient = new SESClient(awsConfig);
+
+export { sesClient };
 export const dynamoDBClient = new DynamoDBClient(awsConfig);
 export const dynamoDocClient = DynamoDBDocumentClient.from(dynamoDBClient, {
   marshallOptions: {

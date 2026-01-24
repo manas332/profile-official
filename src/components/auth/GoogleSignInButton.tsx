@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithRedirect } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
+import {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  storeCodeVerifier,
+} from "@/lib/aws/oauth-pkce";
 
 export default function GoogleSignInButton() {
   const [loading, setLoading] = useState(false);
@@ -14,9 +18,40 @@ export default function GoogleSignInButton() {
       setLoading(true);
       setError(null);
 
-      // Use Amplify's signInWithRedirect for OAuth providers like Google
-      await signInWithRedirect({ provider: "Google" });
-      // Note: User will be redirected to Cognito Hosted UI and back via callback URL
+      // Manual OAuth flow with PKCE (workaround for Amplify v6 OAuth completion bug)
+      const clientId = process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID;
+      const domain = process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN;
+      const redirectUri = process.env.NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI;
+
+      if (!clientId || !domain || !redirectUri) {
+        throw new Error("Missing Cognito configuration");
+      }
+
+      // Generate PKCE values
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      const state = generateCodeVerifier().substring(0, 16); // Shorter state
+
+      // Store code_verifier for callback
+      storeCodeVerifier(state, codeVerifier);
+
+      // Build Cognito authorization URL
+      const params = new URLSearchParams({
+        response_type: "code",
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: "openid email profile",
+        state: state,
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+        identity_provider: "Google",
+        prompt: "select_account", // Force account selection screen
+      });
+
+      const authUrl = `https://${domain}/oauth2/authorize?${params.toString()}`;
+      
+      // Redirect to Cognito
+      window.location.href = authUrl;
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       setError(err.message || "Failed to sign in with Google");

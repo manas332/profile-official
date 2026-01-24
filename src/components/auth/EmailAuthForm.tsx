@@ -33,7 +33,7 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
       setLoading(true);
 
       if (mode === "login") {
-        // For login: Direct email/password check (no OTP)
+        // For login: Try direct email/password first, or use OTP if needed
         const response = await fetch("/api/auth/email", {
           method: "POST",
           headers: {
@@ -48,11 +48,32 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
 
         if (!response.ok) {
           const data = await response.json();
-          // If user doesn't exist, suggest signup
+          
+          // If user doesn't exist, redirect to signup
           if (response.status === 404 || data.error?.includes("not found") || data.error?.includes("No account")) {
+            if (data.shouldRedirect && data.redirectTo) {
+              router.push(data.redirectTo);
+              return;
+            }
             setError(`No account found with this email. Click here to sign up.`);
             return;
           }
+          
+          // If user registered via Google, show OTP option
+          if (response.status === 403 && data.provider === "google" && data.allowOTP) {
+            setError("You signed up via Google. You can either continue with Google sign-in or verify your email via OTP.");
+            setSuccessMessage("Click the Google button above to sign in directly, or click 'Send OTP' below to verify your email.");
+            // Don't auto-show OTP, let user choose
+            return;
+          }
+          
+          // For other errors (like invalid password), allow OTP as alternative
+          if (response.status === 401) {
+            setError(data.error || "Invalid email or password. You can also verify your email via OTP.");
+            setSuccessMessage("Click 'Send OTP' below to verify your email and login.");
+            return;
+          }
+          
           throw new Error(data.error || "Login failed");
         }
 
@@ -193,14 +214,62 @@ export default function EmailAuthForm({ mode }: EmailAuthFormProps) {
         <p className="text-sm text-green-600 text-center">{successMessage}</p>
       )}
 
-      <Button
-        variant="primary"
-        type="submit"
-        className="w-full"
-        disabled={loading}
-      >
-        {loading ? (mode === "login" ? "Logging in..." : "Sending OTP...") : mode === "signup" ? "Sign Up" : "Login"}
-      </Button>
+      <div className="space-y-3">
+        <Button
+          variant="primary"
+          type="submit"
+          className="w-full"
+          disabled={loading}
+        >
+          {loading ? (mode === "login" ? "Logging in..." : "Sending OTP...") : mode === "signup" ? "Sign Up" : "Login"}
+        </Button>
+        
+        {mode === "login" && !showOTP && (
+          <button
+            type="button"
+            onClick={async () => {
+              if (!email) {
+                setError("Please enter your email address first");
+                return;
+              }
+              
+              setError(null);
+              setSuccessMessage(null);
+              setLoading(true);
+              
+              try {
+                const response = await fetch("/api/resend", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ email, purpose: "login" }),
+                });
+
+                if (!response.ok) {
+                  const data = await response.json();
+                  throw new Error(data.error || "Failed to send OTP");
+                }
+
+                const data = await response.json();
+                setError(null);
+                setSuccessMessage(data.message || "OTP sent! Please check your email.");
+                setShowOTP(true);
+              } catch (err: any) {
+                console.error("OTP send error:", err);
+                setError(err.message || "Failed to send OTP");
+                setSuccessMessage(null);
+              } finally {
+                setLoading(false);
+              }
+            }}
+            className="w-full text-sm text-blue-600 hover:text-blue-700 underline disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || !email}
+          >
+            Or verify via OTP instead
+          </button>
+        )}
+      </div>
     </form>
   );
 }

@@ -61,18 +61,23 @@ This guide will help you set up AWS Cognito User Pool for authentication with em
 ## Step 3: Configure App Client
 
 1. In User Pool, go to "App integration" → "App clients"
-2. Click on your app client
-3. **Hosted UI settings:**
+2. Click on your app client, then **Edit**
+3. **Authentication flows** (required for email/password sign-in):
+   - Enable **ALLOW_USER_PASSWORD_AUTH** (used for `InitiateAuth` with email + password)
+   - Enable **ALLOW_REFRESH_TOKEN_AUTH** (recommended; used for refreshing tokens)
+   - Optional: **ALLOW_USER_SRP_AUTH** if you switch to SRP later
+4. **Hosted UI settings:**
    - Enable "Hosted UI"
-   - **Allowed callback URLs:** 
-     - `http://localhost:3000/api/auth/cognito/callback` (for dev)
-     - `https://yourdomain.com/api/auth/cognito/callback` (for production)
+   - **Allowed callback URLs:** Use a **client-side** URL so Amplify can complete PKCE (server callbacks get `invalid_code_verifier`):
+     - `http://localhost:3000/auth/callback` (for dev)
+     - `https://yourdomain.com/auth/callback` (for production)
    - **Allowed sign-out URLs:**
      - `http://localhost:3000/login` (for dev)
      - `https://yourdomain.com/login` (for production)
    - **Identity providers:** Select "Google" and "Cognito user pool"
    - **OAuth 2.0 grant types:** Select "Authorization code grant"
    - **OpenID Connect scopes:** Select "openid", "email", "profile"
+5. Save changes
 
 ## Step 4: Set Up Cognito Domain
 
@@ -96,7 +101,7 @@ AWS_COGNITO_CLIENT_SECRET=your_client_secret_if_used
 NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID=ap-south-1_XXXXXXXXX
 NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID=your_client_id_here
 NEXT_PUBLIC_AWS_COGNITO_DOMAIN=humara-pandit-auth.auth.ap-south-1.amazoncognito.com
-NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI=http://localhost:3000/api/auth/cognito/callback
+NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI=http://localhost:3000/auth/callback
 ```
 
 ## Step 6: IAM Permissions
@@ -113,6 +118,7 @@ Your AWS IAM user/role needs these permissions:
         "cognito-idp:AdminCreateUser",
         "cognito-idp:AdminGetUser",
         "cognito-idp:AdminSetUserPassword",
+        "cognito-idp:AdminUpdateUserAttributes",
         "cognito-idp:SignUp",
         "cognito-idp:InitiateAuth",
         "cognito-idp:GetUser",
@@ -124,6 +130,8 @@ Your AWS IAM user/role needs these permissions:
 }
 ```
 
+**Note:** The `AdminUpdateUserAttributes` permission is required for OTP-based authentication to auto-confirm users after email verification.
+
 ## Testing
 
 1. Start your Next.js app
@@ -132,6 +140,8 @@ Your AWS IAM user/role needs these permissions:
 
 ## Troubleshooting
 
+- **"invalid_code_verifier" / "token_exchange_failed":** Amplify’s `signInWithRedirect` uses PKCE; the `code_verifier` stays in the browser. The callback **must** be a **client-side** page (e.g. `/auth/callback`) so Amplify can complete the exchange. Use `NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI=http://localhost:3000/auth/callback` and add that exact URL to Cognito **Allowed callback URLs**.
+- **"USER_PASSWORD_AUTH flow not enabled for this client":** In App clients → your app → Edit → **Authentication flows**, enable **ALLOW_USER_PASSWORD_AUTH** (and **ALLOW_REFRESH_TOKEN_AUTH**). Save.
 - **"Invalid redirect URI":** Make sure callback URL matches exactly in Cognito settings
 - **"User pool not found":** Check USER_POOL_ID in environment variables
 - **"Client not found":** Check CLIENT_ID in environment variables

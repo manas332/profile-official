@@ -50,7 +50,39 @@ export async function POST(request: NextRequest) {
     } else if (action === "login") {
       const validated = loginSchema.parse(data);
       
-      // Try to sign in with Cognito
+      // First, check if user exists in DynamoDB to determine registration method
+      const existingUser = await getUserByEmail(validated.email);
+      
+      // If user doesn't exist, redirect to signup
+      if (!existingUser) {
+        return NextResponse.json(
+          { 
+            error: "No account found with this email. Please sign up first.",
+            shouldRedirect: true,
+            redirectTo: "/signup"
+          },
+          { status: 404 }
+        );
+      }
+      
+      // If user registered via Google, they can use OTP to verify and login
+      // Or they can use Google sign-in directly
+      if (existingUser.provider === "google") {
+        return NextResponse.json(
+          { 
+            error: "You signed up via Google. You can either:",
+            provider: "google",
+            allowOTP: true,
+            options: [
+              "Continue with Google sign-in (recommended)",
+              "Verify your email via OTP to login"
+            ]
+          },
+          { status: 403 }
+        );
+      }
+      
+      // User registered via email, proceed with email/password login
       try {
         const cognitoResult = await signInWithEmail(
           validated.email,

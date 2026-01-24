@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { otpVerificationSchema } from "@/schemas/auth";
 import { verifyOTP, deleteOTP, getUserByEmail } from "@/lib/aws/dynamodb";
-import { signUpWithEmail, signInWithEmail } from "@/lib/aws/cognito-server";
+import { 
+  signUpWithEmail, 
+  signInWithEmail,
+  userExistsInCognito,
+  createCognitoUserWithPassword,
+  confirmCognitoUser,
+  deleteCognitoUser,
+} from "@/lib/aws/cognito-server";
 import { getUserFromIdToken } from "@/lib/aws/cognito";
 import { createUser, getUser } from "@/lib/aws/dynamodb";
 import { createSession } from "@/lib/auth/session";
@@ -43,70 +50,140 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Try to create user with email/password in Cognito
-      let cognitoResult;
-      try {
-        cognitoResult = await signUpWithEmail(
+      // Check if user exists in Cognito
+      const existsInCognito = await userExistsInCognito(validated.email);
+      
+      let cognitoUserId: string;
+      let idToken: string;
+
+      if (existsInCognito) {
+        // User exists in Cognito but not in DynamoDB (Orphaned state)
+        // Since OTP is verified (email ownership proved), we can safely clean up the orphaned record
+        // and create a fresh one to ensure data consistency and correct password.
+        try {
+          await deleteCognitoUser(validated.email);
+        } catch (cleanupError) {
+          console.error("Failed to cleanup orphaned Cognito user:", cleanupError);
+          // If delete fails, we might still be able to proceed if we can sign in
+          // But usually better to fail here than create inconsistent state
+        }
+        
+        // Proceed to create fresh user (same logic as else block below)
+        const cognitoResult = await createCognitoUserWithPassword(
           validated.email,
           password,
           name
         );
-      } catch (authError: any) {
-        // If email already exists in Cognito, try to sign in instead
-        if (authError.message?.includes("Email already in use") || authError.message?.includes("UsernameExists")) {
-          try {
-            const signInResult = await signInWithEmail(validated.email, password);
-            // User exists in Cognito, create DynamoDB record if missing
-            let user = getUserFromIdToken(signInResult.idToken);
-            let dbUser = await getUser(user.id);
-            if (!dbUser) {
-              if (name) {
-                user.name = name;
-              }
-              await createUser(user);
-              dbUser = user;
-            } else {
-              dbUser = user;
-            }
-            await createSession(dbUser, signInResult.idToken);
-            return NextResponse.json({ success: true, user: dbUser });
-          } catch (signInError: any) {
-            // Password might be wrong, or other error
-            if (signInError.message?.includes("Invalid email or password") || signInError.message?.includes("NotAuthorized")) {
-              return NextResponse.json(
-                { error: "Email already registered. Please login with your password." },
-                { status: 400 }
-              );
-            }
-            throw signInError;
-          }
-        }
-        throw authError;
+        
+        cognitoUserId = cognitoResult.userId;
+        
+        // Sign in the newly created user
+        const signInResult = await signInWithEmail(validated.email, password);
+        idToken = signInResult.idToken;
+      } else {
+        // New user - create in Cognito with auto-confirmation (email already verified via OTP)
+        const cognitoResult = await createCognitoUserWithPassword(
+          validated.email,
+          password,
+          name
+        );
+        
+        cognitoUserId = cognitoResult.userId;
+        
+        // Sign in the newly created user
+        const signInResult = await signInWithEmail(validated.email, password);
+        idToken = signInResult.idToken;
       }
 
-      // New user created successfully in Cognito
-      const user: any = {
-        id: cognitoResult.userId,
-        email: cognitoResult.email,
-        name: name,
-        provider: "email",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      // Get user info from ID token
+      let user = getUserFromIdToken(idToken);
+      
+      // Update with provided name if available
+      if (name) {
+        user.name = name;
+      }
+      user.provider = "email";
+
+      // Create user in DynamoDB
       await createUser(user);
 
-      // For Cognito signup, user needs to confirm email first before getting tokens
-      // For now, we'll need to sign them in after confirmation
-      // This is a simplified flow - in production you might want to auto-confirm
+      // Create session
+      await createSession(user, idToken);
+
       return NextResponse.json({ 
         success: true, 
         user,
-        requiresConfirmation: cognitoResult.requiresConfirmation,
-        message: cognitoResult.requiresConfirmation 
-          ? "Please check your email to confirm your account, then login."
-          : "Account created successfully. Please login."
+        message: "Account created successfully!"
       });
     } else if (purpose === "login") {
+      // Check if user exists in DynamoDB first
+      const existingUser = await getUserByEmail(validated.email);
+      
+      // Check if user exists in Cognito
+      const existsInCognito = await userExistsInCognito(validated.email);
+
+      // If user registered via Google, OTP verification confirms email ownership
+      // They still need to sign in via Google (no password available)
+      if (existingUser && existingUser.provider === "google") {
+        // OTP verified successfully - email ownership confirmed
+        // Confirm the user in Cognito if they exist there
+        if (existsInCognito) {
+          await confirmCognitoUser(validated.email);
+        }
+        
+        return NextResponse.json({ 
+          success: true, 
+          user: existingUser,
+          verified: true,
+          requiresGoogleSignIn: true,
+          message: "Email verified successfully. Please sign in via Google to continue."
+        });
+      }
+
+      // If user doesn't exist in DynamoDB but exists in Cognito, create DynamoDB record
+      if (!existingUser && existsInCognito) {
+        // User exists in Cognito but not in DynamoDB - this shouldn't happen normally
+        // but we'll handle it by requiring password to sign in
+        if (!password) {
+          return NextResponse.json(
+            { error: "Password is required for login" },
+            { status: 400 }
+          );
+        }
+
+        try {
+          const signInResult = await signInWithEmail(validated.email, password);
+          let user = getUserFromIdToken(signInResult.idToken);
+          user.provider = "email";
+          
+          // Create user in DynamoDB
+          await createUser(user);
+          
+          // Confirm user in Cognito (mark email as verified)
+          await confirmCognitoUser(validated.email);
+          
+          await createSession(user, signInResult.idToken);
+          return NextResponse.json({ success: true, user });
+        } catch (authError: any) {
+          if (authError.message?.includes("Invalid email or password") || authError.message?.includes("NotAuthorized")) {
+            return NextResponse.json(
+              { error: "Invalid email or password. Please check your credentials." },
+              { status: 401 }
+            );
+          }
+          throw authError;
+        }
+      }
+
+      // If user doesn't exist at all, redirect to signup
+      if (!existingUser && !existsInCognito) {
+        return NextResponse.json(
+          { error: "No account found with this email. Please sign up first." },
+          { status: 404 }
+        );
+      }
+
+      // For email-registered users, password is required
       if (!password) {
         return NextResponse.json(
           { error: "Password is required for login" },
@@ -114,17 +191,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if user exists first
-      const existingUser = await getUserByEmail(validated.email);
-      if (!existingUser) {
-        return NextResponse.json(
-          { error: "No account found with this email. Please sign up first." },
-          { status: 404 }
-        );
-      }
-
       // Sign in user with Cognito
       try {
+        // Confirm user in Cognito (mark email as verified via OTP)
+        if (existsInCognito) {
+          await confirmCognitoUser(validated.email);
+        }
+
         const cognitoResult = await signInWithEmail(
           validated.email,
           password
@@ -132,10 +205,14 @@ export async function POST(request: NextRequest) {
 
         let user = getUserFromIdToken(cognitoResult.idToken);
         let dbUser = await getUser(user.id);
+        
         if (!dbUser) {
+          // User exists in Cognito but not in DynamoDB - create record
+          user.provider = existingUser?.provider || "email";
           await createUser(user);
           dbUser = user;
         } else {
+          // Update user info from token
           dbUser = user;
         }
 
@@ -148,6 +225,29 @@ export async function POST(request: NextRequest) {
             { error: "Invalid email or password. Please check your credentials." },
             { status: 401 }
           );
+        }
+        if (authError.message?.includes("User not confirmed") || authError.message?.includes("UserNotConfirmedException")) {
+          // User exists but not confirmed - try to confirm and retry
+          try {
+            await confirmCognitoUser(validated.email);
+            const retryResult = await signInWithEmail(validated.email, password);
+            let user = getUserFromIdToken(retryResult.idToken);
+            let dbUser = await getUser(user.id);
+            if (!dbUser) {
+              user.provider = existingUser?.provider || "email";
+              await createUser(user);
+              dbUser = user;
+            } else {
+              dbUser = user;
+            }
+            await createSession(dbUser, retryResult.idToken);
+            return NextResponse.json({ success: true, user: dbUser });
+          } catch (retryError: any) {
+            return NextResponse.json(
+              { error: "Invalid email or password. Please check your credentials." },
+              { status: 401 }
+            );
+          }
         }
         throw authError;
       }

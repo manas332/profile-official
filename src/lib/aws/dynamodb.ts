@@ -4,6 +4,7 @@ import {
   UpdateCommand,
   DeleteCommand,
   QueryCommand,
+  ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { dynamoDocClient } from "./config";
 import { User } from "@/types/auth";
@@ -97,7 +98,6 @@ export async function getUser(userId: string): Promise<User | null> {
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
     // Query using GSI on email (assuming email-index GSI exists)
-    // If GSI doesn't exist, we'll scan (less efficient but works)
     const result = await dynamoDocClient.send(
       new QueryCommand({
         TableName: USERS_TABLE,
@@ -114,37 +114,49 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       return itemToUser(result.Items[0]);
     }
 
-    // Fallback: Scan if GSI doesn't exist (not recommended for production)
-    // This is a temporary fallback - should create GSI in production
-    console.warn(
-      "email-index GSI not found, using scan (inefficient). Please create GSI in DynamoDB."
-    );
-    const scanResult = await dynamoDocClient.send(
-      new QueryCommand({
-        TableName: USERS_TABLE,
-        FilterExpression: "email = :email",
-        ExpressionAttributeValues: {
-          ":email": email,
-        },
-        Limit: 1,
-      })
-    );
-
-    if (scanResult.Items && scanResult.Items.length > 0) {
-      return itemToUser(scanResult.Items[0]);
-    }
-
     return null;
   } catch (error: any) {
-    // If GSI doesn't exist, try alternative approach
-    if (error.name === "ValidationException" && error.message?.includes("index")) {
-      // GSI doesn't exist, try scanning (not recommended for production)
+    // If GSI doesn't exist, use ScanCommand as fallback (less efficient but works)
+    if (
+      error.name === "ValidationException" &&
+      (error.message?.includes("index") ||
+        error.message?.includes("KeyConditions") ||
+        error.message?.includes("KeyConditionExpression"))
+    ) {
       console.warn(
-        "email-index GSI not found. Please create a GSI on email attribute in DynamoDB."
+        "⚠️ email-index GSI not found, using scan (inefficient). Please create GSI in DynamoDB."
       );
-      // For now, return null - user should create the GSI
-      return null;
+      
+      try {
+        // Use ScanCommand when GSI doesn't exist
+        const scanResult = await dynamoDocClient.send(
+          new ScanCommand({
+            TableName: USERS_TABLE,
+            FilterExpression: "email = :email",
+            ExpressionAttributeValues: {
+              ":email": email,
+            },
+            Limit: 1,
+          })
+        );
+
+        if (scanResult.Items && scanResult.Items.length > 0) {
+          return itemToUser(scanResult.Items[0]);
+        }
+        
+        return null;
+      } catch (scanError: any) {
+        console.error("Error scanning DynamoDB table:", scanError);
+        if (scanError.name === "ResourceNotFoundException") {
+          console.error(
+            `⚠️ DynamoDB table "${USERS_TABLE}" not found. Please create it in AWS Console.`
+          );
+          return null;
+        }
+        throw scanError;
+      }
     }
+    
     console.error("Error getting user by email from DynamoDB:", error);
     if (error.name === "ResourceNotFoundException") {
       console.error(

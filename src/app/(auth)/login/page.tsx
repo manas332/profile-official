@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import EmailAuthForm from "@/components/auth/EmailAuthForm";
+import VerifiedMessage from "@/components/auth/VerifiedMessage";
 
 export default async function LoginPage() {
   const session = await getSession();
@@ -18,6 +19,8 @@ export default async function LoginPage() {
           <h1 className="text-3xl font-bold text-black mb-2">Welcome Back</h1>
           <p className="text-black">Sign in to continue to your account</p>
         </div>
+
+        <VerifiedMessage />
 
         <div className="space-y-6">
           <GoogleSignInButton />

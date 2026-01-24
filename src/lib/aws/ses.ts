@@ -80,25 +80,39 @@ export async function sendOTPEmail(
       throw new Error("Failed to send email - no MessageId returned");
     }
   } catch (error: any) {
-    console.error("Error sending OTP email:", error);
+    console.error("❌ Error sending OTP email:", error);
+    console.error("Error details:", {
+      name: error.name,
+      message: error.message,
+      code: error.Code,
+      statusCode: error.$metadata?.httpStatusCode,
+      requestId: error.$metadata?.requestId,
+    });
     
     // Handle AWS SES specific errors
-    if (error.name === "MessageRejected") {
-      throw new Error("Email address is not verified or rejected. Please verify your email in SES console.");
+    if (error.name === "MessageRejected" || error.Code === "MessageRejected") {
+      const detailedError = `Email sending rejected. This usually means:
+1. The sender email (${FROM_EMAIL}) is not verified in AWS SES
+2. Or you're in sandbox mode and the recipient email is not verified
+3. Check AWS SES Console → Verified identities`;
+      console.error(detailedError);
+      throw new Error(detailedError);
     }
-    if (error.name === "MailFromDomainNotVerifiedException") {
-      throw new Error("Sender email domain is not verified in SES.");
+    if (error.name === "MailFromDomainNotVerifiedException" || error.Code === "MailFromDomainNotVerifiedException") {
+      throw new Error(`Sender email domain is not verified in SES. Please verify ${FROM_EMAIL} in AWS SES Console.`);
     }
-    if (error.name === "AccountSendingPausedException") {
-      throw new Error("Account sending is paused. Please check SES console.");
+    if (error.name === "AccountSendingPausedException" || error.Code === "AccountSendingPausedException") {
+      throw new Error("Account sending is paused. Please check AWS SES Console → Account dashboard.");
     }
-    if (error.name === "SendingPausedException") {
-      throw new Error("Sending is paused for this account.");
+    if (error.name === "SendingPausedException" || error.Code === "SendingPausedException") {
+      throw new Error("Sending is paused for this account. Please check AWS SES Console.");
     }
-    if (error.message?.includes("rate") || error.message?.includes("throttl")) {
+    if (error.message?.includes("rate") || error.message?.includes("throttl") || error.Code === "Throttling") {
       throw new Error("Too many requests. Please wait a moment and try again.");
     }
     
-    throw new Error(error.message || "Failed to send OTP email. Please try again.");
+    // Provide more detailed error message
+    const errorMsg = error.message || error.Code || "Failed to send OTP email";
+    throw new Error(`${errorMsg}. Check AWS SES Console and verify ${FROM_EMAIL} is verified.`);
   }
 }

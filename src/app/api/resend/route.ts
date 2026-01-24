@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emailSchema } from "@/schemas/auth";
 import { sendOTPEmail } from "@/lib/aws/ses";
-import { saveOTP, getUserByEmail } from "@/lib/aws/dynamodb";
+import { saveOTP, getUserByEmail, deleteOTP } from "@/lib/aws/dynamodb";
 import { generateOTP } from "@/lib/utils/helpers";
 
 export async function POST(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     const validated = emailSchema.parse({ email });
 
-    // Only signup uses OTP now, so check if user already exists
+    // For signup, check if user already exists
     if (purpose === "signup") {
       const existingUser = await getUserByEmail(validated.email);
       if (existingUser) {
@@ -22,6 +22,21 @@ export async function POST(request: NextRequest) {
             redirectTo: "/login"
           },
           { status: 400 }
+        );
+      }
+    }
+    
+    // For login, check if user exists - if not, suggest signup
+    if (purpose === "login") {
+      const existingUser = await getUserByEmail(validated.email);
+      if (!existingUser) {
+        return NextResponse.json(
+          { 
+            error: "No account found with this email. Please sign up first.",
+            shouldRedirect: true,
+            redirectTo: "/signup"
+          },
+          { status: 404 }
         );
       }
     }
@@ -45,12 +60,37 @@ export async function POST(request: NextRequest) {
     // Send OTP email
     try {
       await sendOTPEmail(validated.email, otp, purpose as "signup" | "login");
-      console.log("OTP email sent successfully to:", validated.email);
+      console.log("✅ OTP email sent successfully to:", validated.email);
     } catch (emailError: any) {
-      console.error("Failed to send OTP email:", emailError);
-      // OTP is saved, but email failed - still return error so user knows
+      console.error("❌ Failed to send OTP email:", emailError);
+      console.error("Error details:", {
+        name: emailError.name,
+        message: emailError.message,
+        code: emailError.code,
+        stack: emailError.stack,
+      });
+      
+      // Delete the saved OTP since email failed
+      try {
+        await deleteOTP(validated.email);
+      } catch (deleteError) {
+        console.error("Failed to delete OTP after email failure:", deleteError);
+      }
+      
+      // Provide helpful error message
+      let errorMessage = "Failed to send OTP email. ";
+      if (emailError.message?.includes("not verified")) {
+        errorMessage += "Please verify the sender email in AWS SES console.";
+      } else if (emailError.message?.includes("MessageRejected")) {
+        errorMessage += "Email address may not be verified in SES. Please check AWS SES console.";
+      } else if (emailError.message?.includes("AccountSendingPausedException")) {
+        errorMessage += "Email sending is paused. Please check AWS SES console.";
+      } else {
+        errorMessage += emailError.message || "Please check your email address and try again.";
+      }
+      
       return NextResponse.json(
-        { error: emailError.message || "Failed to send OTP email. Please check your email address and try again." },
+        { error: errorMessage },
         { status: 500 }
       );
     }
