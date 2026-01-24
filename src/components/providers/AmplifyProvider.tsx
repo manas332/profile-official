@@ -10,19 +10,19 @@ export default function AmplifyProvider({ children }: { children: React.ReactNod
       const config = {
         Auth: {
           Cognito: {
-            userPoolId: process.env.NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID || "",
-            userPoolClientId: process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID || "",
-            region: process.env.NEXT_PUBLIC_AWS_REGION || "ap-south-1",
+            userPoolId: process.env.NEXT_PUBLIC_APP_AWS_COGNITO_USER_POOL_ID || "",
+            userPoolClientId: process.env.NEXT_PUBLIC_APP_AWS_COGNITO_CLIENT_ID || "",
+            region: process.env.NEXT_PUBLIC_APP_AWS_REGION || "ap-south-1",
             loginWith: {
               oauth: {
-                domain: process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN || "",
+                domain: process.env.NEXT_PUBLIC_APP_AWS_COGNITO_DOMAIN || "",
                 scopes: ["openid", "email", "profile"],
                 redirectSignIn: [
-                  process.env.NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI || 
+                  process.env.NEXT_PUBLIC_APP_AWS_COGNITO_REDIRECT_URI || 
                   `${window.location.origin}/api/auth/cognito/callback`
                 ],
                 redirectSignOut: [
-                  process.env.NEXT_PUBLIC_AWS_COGNITO_SIGNOUT_URI || 
+                  process.env.NEXT_PUBLIC_APP_AWS_COGNITO_SIGNOUT_URI || 
                   `${window.location.origin}/login`
                 ],
                 responseType: "code" as const,

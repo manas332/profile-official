@@ -37,9 +37,9 @@ export default function AuthCallbackPage() {
         }
 
         // Exchange code for tokens manually (workaround for Amplify v6 bug)
-        const clientId = process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID;
-        const domain = process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN;
-        const redirectUri = process.env.NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI;
+        const clientId = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_CLIENT_ID;
+        const domain = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_DOMAIN;
+        const redirectUri = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_REDIRECT_URI;
 
         if (!clientId || !domain || !redirectUri) {
           throw new Error("Missing Cognito configuration");

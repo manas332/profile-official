@@ -36,7 +36,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      region: process.env.AWS_REGION || "ap-south-1",
+      region: process.env.APP_AWS_REGION || "ap-south-1",
       note: "You must use 'Verified Identities' (Permission), NOT 'Email Validation' (Deliverability)",
       identities_found: identities,
       statuses: verifyResult.VerificationAttributes,

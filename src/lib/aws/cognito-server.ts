@@ -15,9 +15,9 @@ import { cognitoClient } from "./config";
 import { getUserFromIdToken } from "./cognito";
 import crypto from "crypto";
 
-const CLIENT_ID = process.env.AWS_COGNITO_CLIENT_ID || "";
-const CLIENT_SECRET = process.env.AWS_COGNITO_CLIENT_SECRET;
-const USER_POOL_ID = process.env.AWS_COGNITO_USER_POOL_ID || "";
+const CLIENT_ID = process.env.APP_AWS_COGNITO_CLIENT_ID || "";
+const CLIENT_SECRET = process.env.APP_AWS_COGNITO_CLIENT_SECRET;
+const USER_POOL_ID = process.env.APP_AWS_COGNITO_USER_POOL_ID || "";
 
 // Helper to compute secret hash for Cognito (if client secret is used)
 function computeSecretHash(username: string): string | undefined {

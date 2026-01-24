@@ -9,8 +9,8 @@ import {
 import { dynamoDocClient } from "./config";
 import { User } from "@/types/auth";
 
-const USERS_TABLE = process.env.AWS_DYNAMODB_USERS_TABLE || "users";
-const OTP_TABLE = process.env.AWS_DYNAMODB_OTP_TABLE || "otp_codes";
+const USERS_TABLE = process.env.APP_AWS_DYNAMODB_USERS_TABLE || "users";
+const OTP_TABLE = process.env.APP_AWS_DYNAMODB_OTP_TABLE || "otp_codes";
 
 // Helper to convert DynamoDB item to User
 function itemToUser(item: any): User {

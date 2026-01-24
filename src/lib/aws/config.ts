@@ -7,29 +7,29 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { CognitoIdentityProviderClient } from "@aws-sdk/client-cognito-identity-provider";
 
 // Validate AWS configuration
-if (!process.env.AWS_REGION) {
-  console.error("AWS_REGION is not set in environment variables");
-  throw new Error("AWS_REGION is required. Please set it in your .env.local file.");
+if (!process.env.APP_AWS_REGION) {
+  console.error("APP_AWS_REGION is not set in environment variables");
+  throw new Error("APP_AWS_REGION is required. Please set it in your .env.local file.");
 }
 
-if (!process.env.AWS_ACCESS_KEY_ID) {
-  console.warn("AWS_ACCESS_KEY_ID is not set. AWS SDK will use default credential chain.");
+if (!process.env.APP_AWS_ACCESS_KEY_ID) {
+  console.warn("APP_AWS_ACCESS_KEY_ID is not set. AWS SDK will use default credential chain.");
 }
 
-if (!process.env.AWS_SECRET_ACCESS_KEY) {
-  console.warn("AWS_SECRET_ACCESS_KEY is not set. AWS SDK will use default credential chain.");
+if (!process.env.APP_AWS_SECRET_ACCESS_KEY) {
+  console.warn("APP_AWS_SECRET_ACCESS_KEY is not set. AWS SDK will use default credential chain.");
 }
 
-const region = process.env.AWS_REGION || "ap-south-1";
+const region = process.env.APP_AWS_REGION || "ap-south-1";
 
 // AWS SDK v3 client configuration
 const awsConfig = {
   region,
-  ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+  ...(process.env.APP_AWS_ACCESS_KEY_ID && process.env.APP_AWS_SECRET_ACCESS_KEY
     ? {
         credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
         },
       }
     : {}),

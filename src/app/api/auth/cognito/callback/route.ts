@@ -3,8 +3,8 @@ import { createUser, getUser } from "@/lib/aws/dynamodb";
 import { getUserFromIdToken } from "@/lib/aws/cognito";
 import { createSession } from "@/lib/auth/session";
 
-const CLIENT_ID = process.env.AWS_COGNITO_CLIENT_ID || "";
-const CLIENT_SECRET = process.env.AWS_COGNITO_CLIENT_SECRET;
+const CLIENT_ID = process.env.APP_AWS_COGNITO_CLIENT_ID || "";
+const CLIENT_SECRET = process.env.APP_AWS_COGNITO_CLIENT_SECRET;
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange authorization code for tokens using OAuth2 token endpoint
-    const redirectUri = process.env.NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI || `${request.nextUrl.origin}/api/auth/cognito/callback`;
-    const cognitoDomain = process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN;
+    const redirectUri = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_REDIRECT_URI || `${request.nextUrl.origin}/api/auth/cognito/callback`;
+    const cognitoDomain = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_DOMAIN;
     
     if (!cognitoDomain) {
       return NextResponse.redirect(new URL("/login?error=no_cognito_domain", request.url));

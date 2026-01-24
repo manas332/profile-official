@@ -1,14 +1,14 @@
 import { SendEmailCommand, SendEmailCommandInput } from "@aws-sdk/client-ses";
 import { sesClient } from "./config";
 
-if (!process.env.AWS_SES_FROM_EMAIL) {
-  console.error("AWS_SES_FROM_EMAIL is not set in environment variables");
+if (!process.env.APP_AWS_SES_FROM_EMAIL) {
+  console.error("APP_AWS_SES_FROM_EMAIL is not set in environment variables");
   throw new Error(
-    "AWS_SES_FROM_EMAIL is required. Please set it in your .env.local file."
+    "APP_AWS_SES_FROM_EMAIL is required. Please set it in your .env.local file."
   );
 }
 
-const FROM_EMAIL = process.env.AWS_SES_FROM_EMAIL;
+const FROM_EMAIL = process.env.APP_AWS_SES_FROM_EMAIL;
 
 export async function sendOTPEmail(
   email: string,

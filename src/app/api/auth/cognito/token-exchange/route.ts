@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CLIENT_ID = process.env.AWS_COGNITO_CLIENT_ID || "";
-const CLIENT_SECRET = process.env.AWS_COGNITO_CLIENT_SECRET;
-const DOMAIN = process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN || "";
-const REDIRECT_URI = process.env.NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI || "";
+const CLIENT_ID = process.env.APP_AWS_COGNITO_CLIENT_ID || "";
+const CLIENT_SECRET = process.env.APP_AWS_COGNITO_CLIENT_SECRET;
+const DOMAIN = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_DOMAIN || "";
+const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_REDIRECT_URI || "";
 
 export async function POST(request: NextRequest) {
   try {
