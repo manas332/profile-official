@@ -20,24 +20,12 @@ export default async function AstroPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <div className="gradient-bg">
-        <HeroSection />
-      </div>
-      <div className="gradient-bg-reverse">
-        <AboutSection />
-      </div>
-      <div className="gradient-bg">
-        <ConsultationPackages />
-      </div>
-      <div className="gradient-bg-reverse">
-        <QuoteOfDay />
-      </div>
-      <div className="gradient-bg">
-        <ProductsSection />
-      </div>
-      <div className="gradient-bg-reverse">
-        <PanchangCard />
-      </div>
+      <HeroSection />
+      <AboutSection />
+      <ConsultationPackages />
+      <QuoteOfDay />
+      <ProductsSection />
+      <PanchangCard />
       <Footer />
       <FloatingConsultationButton />
     </div>

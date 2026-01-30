@@ -119,30 +119,6 @@
        1px  1px 0 rgba(0,0,0,0.85),
        0px  2px 6px rgba(0,0,0,0.35);
   }
-  /* Custom Gradient Backgrounds */
-  .gradient-bg {
-    background: linear-gradient(
-      180deg,
-      #FFFCF7 0%,
-      #FFFAF2 20%,
-      #FFF8ED 40%,
-      #FFF6E8 60%,
-      #FFF4E3 80%,
-      #FFF2DE 100%
-    );
-  }
-
-  .gradient-bg-reverse {
-    background: linear-gradient(
-      180deg,
-      #FFF2DE 0%,
-      #FFF4E3 20%,
-      #FFF6E8 40%,
-      #FFF8ED 60%,
-      #FFFAF2 80%,
-      #FFFCF7 100%
-    );
-  }
 }
 
 @media (prefers-color-scheme: dark) {
