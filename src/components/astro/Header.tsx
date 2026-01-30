@@ -18,7 +18,7 @@ export default function Header() {
 
   return (
     <motion.header
-      className="sticky top-0 z-50 bg-amber-lightest/80 backdrop-blur-md border-b border-amber-light shadow-sm"
+      className="sticky top-0 z-50 bg-[#FCE181]/40 backdrop-blur-xl border-b border-white/20 shadow-xs"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}

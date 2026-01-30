@@ -12,9 +12,7 @@ function AuthenticatorContent() {
   const { authStatus } = useAuthenticator((context) => [context.authStatus]);
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/8a23d420-907e-4e4f-add4-9173193b5450', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'login/page.tsx:authStatusEffect', message: 'Auth status changed', data: { authStatus, currentUrl: window.location.href }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'C' }) }).catch(() => { });
-    // #endregion
+
 
     // If already authenticated, redirect
     if (authStatus === "authenticated") {
@@ -25,9 +23,7 @@ function AuthenticatorContent() {
   useEffect(() => {
     // Listen for auth events to sync user to DynamoDB
     const unsubscribe = Hub.listen("auth", async ({ payload }) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7244/ingest/8a23d420-907e-4e4f-add4-9173193b5450', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'login/page.tsx:hubListener', message: 'Auth hub event received', data: { event: payload.event, data: JSON.stringify(payload.data) }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'C,E' }) }).catch(() => { });
-      // #endregion
+
 
       if (payload.event === "signedIn" || payload.event === "signInWithRedirect") {
         await syncUserAndRedirect();
