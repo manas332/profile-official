@@ -1,34 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromIdToken } from "@/lib/aws/cognito";
-import { createUser, getUser } from "@/lib/aws/dynamodb";
-import { createSession, getSession } from "@/lib/auth/session";
+import { createSession } from "@/lib/auth/session";
+import { createUser, getUser, getUserByEmail, updateUser } from "@/lib/aws/dynamodb";
 
-// GET: Check existing session
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getSession();
-    
-    if (session) {
-      return NextResponse.json({
-        authenticated: true,
-        user: session.user,
-      });
-    }
-    
-    return NextResponse.json({
-      authenticated: false,
-      user: null,
-    });
-  } catch (error: any) {
-    console.error("Session check error:", error);
-    return NextResponse.json({
-      authenticated: false,
-      user: null,
-    });
-  }
-}
-
-// POST: Create/update session from Amplify token
+// POST: Sync user to DynamoDB after Amplify authentication
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -42,50 +17,61 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user info from ID token
-    let user = getUserFromIdToken(idToken);
-    
-    // Check/create DynamoDB record
-    let dbUser = await getUser(user.id);
-    
-    // Also check by email in case user exists with different ID
-    if (!dbUser && user.email) {
-      const { getUserByEmail, updateUser } = await import("@/lib/aws/dynamodb");
-      const existingUserByEmail = await getUserByEmail(user.email);
-      if (existingUserByEmail) {
-        dbUser = existingUserByEmail;
-        // Update profile info (can't change primary key id)
-        await updateUser(existingUserByEmail.id, {
-          photoURL: user.photoURL || existingUserByEmail.photoURL,
-          name: user.name || existingUserByEmail.name,
-        });
-        dbUser = { ...existingUserByEmail, photoURL: user.photoURL || existingUserByEmail.photoURL, name: user.name || existingUserByEmail.name };
-      }
-    }
-    
-    if (!dbUser) {
-      await createUser(user);
-      dbUser = user;
-    } else {
-      // Update user info from token (in case profile changed)
-      const { updateUser } = await import("@/lib/aws/dynamodb");
-      await updateUser(dbUser.id, {
-        photoURL: user.photoURL || dbUser.photoURL,
-        name: user.name || dbUser.name,
-      });
-      dbUser = { ...dbUser, photoURL: user.photoURL || dbUser.photoURL, name: user.name || dbUser.name };
+    let tokenUser;
+    try {
+      tokenUser = getUserFromIdToken(idToken);
+    } catch (error: any) {
+      console.error("Error decoding token:", error);
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
     }
 
-    // Create session
+    // Check if user exists in DynamoDB by ID first
+    let dbUser = await getUser(tokenUser.id);
+
+    // Also check by email to handle account linking
+    // (user signed up with email, then signs in with Google using same email)
+    if (!dbUser && tokenUser.email) {
+      const existingUserByEmail = await getUserByEmail(tokenUser.email);
+      if (existingUserByEmail) {
+        dbUser = existingUserByEmail;
+        // Update profile info from the new token
+        const updateData = {
+          photoURL: tokenUser.photoURL || existingUserByEmail.photoURL,
+          name: tokenUser.name || existingUserByEmail.name,
+        };
+        await updateUser(existingUserByEmail.id, updateData);
+        dbUser = { ...existingUserByEmail, ...updateData };
+      }
+    }
+
+    if (!dbUser) {
+      // New user - create in DynamoDB
+      await createUser(tokenUser);
+      dbUser = tokenUser;
+    } else {
+      // Existing user - update profile info from token
+      const updateData = {
+        photoURL: tokenUser.photoURL || dbUser.photoURL,
+        name: tokenUser.name || dbUser.name,
+      };
+      await updateUser(dbUser.id, updateData);
+      dbUser = { ...dbUser, ...updateData };
+    }
+
+    // Create session cookie
     await createSession(dbUser, idToken);
 
     return NextResponse.json({
-      authenticated: true,
+      success: true,
       user: dbUser,
     });
   } catch (error: any) {
-    console.error("Session creation error:", error);
+    console.error("Session sync error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create session" },
+      { error: error.message || "Failed to sync user" },
       { status: 500 }
     );
   }

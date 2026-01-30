@@ -183,12 +183,15 @@ export async function updateUser(
         // Don't update id or createdAt
         const attrName = `#${key}`;
         const attrValue = `:${key}`;
-        updateExpressions.push(`${attrName} = ${attrValue}`);
-        expressionAttributeNames[attrName] = key;
-        expressionAttributeValues[attrValue] =
-          key === "updatedAt"
-            ? new Date().toISOString()
-            : updates[key as keyof User];
+        const value = key === "updatedAt"
+          ? new Date().toISOString()
+          : updates[key as keyof User];
+        // Skip undefined/null values - DynamoDB doesn't allow them in ExpressionAttributeValues
+        if (value !== undefined && value !== null) {
+          updateExpressions.push(`${attrName} = ${attrValue}`);
+          expressionAttributeNames[attrName] = key;
+          expressionAttributeValues[attrValue] = value;
+        }
       }
     });
 
@@ -199,6 +202,11 @@ export async function updateUser(
       expressionAttributeValues[":updatedAt"] = new Date().toISOString();
     }
 
+    // Ensure we have at least one expression (we always have updatedAt, but double-check)
+    if (updateExpressions.length === 0) {
+      throw new Error("Cannot update user: no valid fields to update");
+    }
+    
     await dynamoDocClient.send(
       new UpdateCommand({
         TableName: USERS_TABLE,
