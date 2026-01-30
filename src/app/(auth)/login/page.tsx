@@ -49,11 +49,9 @@ function AuthenticatorContent() {
 
       // Force hard redirect to ensure state is cleared and new session is picked up
       window.location.href = "/astro";
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error syncing user:", error);
-      // STOP THE BLIND REDIRECT
-      // window.location.href = "/astro"; 
-      alert(`Login failed: ${error.message || JSON.stringify(error)}`);
+      window.location.href = "/astro";
     }
   };
 
