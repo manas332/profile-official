@@ -17,7 +17,7 @@ export async function createSession(user: User, token: string): Promise<void> {
     token,
     expiresAt,
   };
-  
+
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
     httpOnly: true,
@@ -31,19 +31,19 @@ export async function createSession(user: User, token: string): Promise<void> {
 export async function getSession(): Promise<SessionData | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
-  
+
   if (!sessionCookie) {
     return null;
   }
-  
+
   try {
     const sessionData: SessionData = JSON.parse(sessionCookie.value);
-    
+
     if (sessionData.expiresAt < Date.now()) {
       await deleteSession();
       return null;
     }
-    
+
     return sessionData;
   } catch {
     return null;
@@ -59,24 +59,24 @@ export function getSessionClient(): SessionData | null {
   if (typeof window === "undefined") {
     return null;
   }
-  
+
   const cookies = document.cookie.split("; ");
   const sessionCookie = cookies.find((cookie) =>
     cookie.startsWith(`${SESSION_COOKIE_NAME}=`)
   );
-  
+
   if (!sessionCookie) {
     return null;
   }
-  
+
   try {
     const value = sessionCookie.split("=")[1];
     const sessionData: SessionData = JSON.parse(decodeURIComponent(value));
-    
+
     if (sessionData.expiresAt < Date.now()) {
       return null;
     }
-    
+
     return sessionData;
   } catch {
     return null;
