@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - echo "Injecting environment variables"
+        # Ensure environment variables coupled with the deployment are written to .env.production
+        # This includes public variables (NEXT_PUBLIC_) and server-side keys
+        - env | grep -e NEXT_PUBLIC_ >> .env.production || true
+        - env | grep -e APP_AWS_ >> .env.production || true
+        - env | grep -e RESEND_API_KEY >> .env.production || true
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
