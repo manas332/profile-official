@@ -66,11 +66,18 @@ function AuthenticatorContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-linear-to-br from-amber-lighter to-amber-medium flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md p-8 bg-white/20 backdrop-blur-xl border border-white/40 shadow-2xl rounded-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-black mb-2">Welcome</h1>
-          <p className="text-gray-600">Sign in or create an account to continue</p>
+          <div className="flex justify-center mb-6">
+            <img
+              src="/hp_logo.png"
+              alt="HP Logo"
+              className="h-24 w-auto object-contain drop-shadow-md"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-amber-ink mb-2 font-serif">Welcome</h1>
+          <p className="text-amber-ink/80 font-medium">Sign in to access your dashboard</p>
         </div>
 
         <Authenticator
@@ -107,7 +114,7 @@ function AuthenticatorContent() {
           }}
           components={{
             Header() {
-              return null; // We have our own header above
+              return null;
             },
           }}
         />

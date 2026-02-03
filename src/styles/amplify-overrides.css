@@ -1,0 +1,109 @@
+/* Amplify UI Overrides */
+[data-amplify-theme] {
+    --amplify-colors-primary-60: var(--color-amber-medium-dark);
+    --amplify-colors-primary-80: var(--color-amber-dark);
+    --amplify-colors-primary-90: var(--color-amber-darker);
+    --amplify-colors-primary-100: var(--color-amber-ink);
+    --amplify-components-tabs-item-active-border-color: var(--color-amber-dark);
+    --amplify-components-tabs-item-active-color: var(--color-amber-ink);
+
+    /* Text colors - forcing brown/amber-ink */
+    --amplify-colors-font-primary: var(--color-amber-ink);
+    --amplify-colors-font-secondary: var(--color-amber-ink);
+    --amplify-colors-font-tertiary: var(--color-amber-ink);
+
+    /* Make backgrounds transparent for glass effect */
+    --amplify-components-authenticator-router-background-color: transparent;
+    --amplify-components-authenticator-container-background-color: transparent;
+}
+
+/* Force transparency on the main card to let our custom glass wrapper show */
+.amplify-authenticator {
+    background-color: transparent !important;
+}
+
+[data-amplify-router] {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Primary Button (Sign In / Create Account) */
+.amplify-button--primary {
+    background-image: linear-gradient(to bottom right, var(--color-amber-dark), #b45309);
+    /* Darker/Stronger Amber to Brown */
+    background-color: transparent !important;
+    color: #fff !important;
+    /* White text on dark button for contrast */
+    border: none !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+    border-radius: 9999px !important;
+    /* Pill shape */
+}
+
+.amplify-button--primary:hover {
+    background-image: linear-gradient(to bottom right, #b45309, #78350f);
+    /* Even darker on hover */
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+.amplify-button--primary:active {
+    transform: translateY(0);
+}
+
+/* Input Fields */
+.amplify-input {
+    border-radius: 0.75rem !important;
+    background-color: rgba(255, 255, 255, 0.5) !important;
+    /* Semi-transparent white */
+    border: 1px solid rgba(107, 63, 0, 0.2) !important;
+    /* Amber-ink with low opacity */
+    color: var(--color-amber-ink) !important;
+}
+
+.amplify-input:focus {
+    border-color: var(--color-amber-dark) !important;
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 0 0 2px var(--color-amber-light) !important;
+}
+
+.amplify-input::placeholder {
+    color: rgba(107, 63, 0, 0.5) !important;
+}
+
+/* Tabs */
+.amplify-tabs {
+    border: none !important;
+    background: transparent !important;
+}
+
+.amplify-tabs__item {
+    color: rgba(107, 63, 0, 0.6) !important;
+    /* Faded brown */
+    border: none !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+}
+
+.amplify-tabs__item[data-state="active"] {
+    border-bottom: 3px solid var(--color-amber-ink) !important;
+    color: var(--color-amber-ink) !important;
+    background: transparent !important;
+}
+
+/* Labels and other text */
+.amplify-label,
+.amplify-text {
+    color: var(--color-amber-ink) !important;
+}
+
+/* Links (like "Forgot Password") */
+.amplify-link {
+    color: var(--color-amber-dark) !important;
+    font-weight: 600;
+}
