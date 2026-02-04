@@ -4,7 +4,8 @@ import React, { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
 import { uploadData } from 'aws-amplify/storage';
-import { createProduct } from '@/app/actions';
+import { createProduct, updateProduct } from '@/app/actions';
+import { Product } from '@/lib/admin-store';
 import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,12 +25,13 @@ const CLOUDFRONT_DOMAIN = 'https://d1gim5ov894p9a.cloudfront.net';
 
 interface ProductUploadProps {
     onSuccess?: () => void;
+    initialData?: Product | null;
 }
 
-export default function ProductUpload({ onSuccess }: ProductUploadProps) {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<ProductFormInputs>();
+export default function ProductUpload({ onSuccess, initialData }: ProductUploadProps) {
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ProductFormInputs>();
     const [file, setFile] = useState<File | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
+    const [preview, setPreview] = useState<string | null>(initialData?.imageUrl || null);
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -40,6 +42,16 @@ export default function ProductUpload({ onSuccess }: ProductUploadProps) {
             setPreview(URL.createObjectURL(selectedFile));
         }
     }, []);
+
+    React.useEffect(() => {
+        if (initialData) {
+            setValue('name', initialData.name);
+            setValue('price', initialData.price);
+            setValue('category', initialData.category);
+            setValue('description', initialData.description);
+            if (initialData.imageUrl) setPreview(initialData.imageUrl);
+        }
+    }, [initialData, setValue]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -56,7 +68,7 @@ export default function ProductUpload({ onSuccess }: ProductUploadProps) {
     };
 
     const onSubmit = async (data: ProductFormInputs) => {
-        if (!file) {
+        if (!file && !initialData?.imageUrl) {
             setStatus({ type: 'error', message: 'Please upload an image.' });
             return;
         }
@@ -64,33 +76,54 @@ export default function ProductUpload({ onSuccess }: ProductUploadProps) {
         setUploading(true);
         setStatus(null);
 
-        const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-        const filePath = `media/${fileName}`;
-
         try {
-            // 1. Upload to S3
-            await uploadData({
-                path: filePath,
-                data: file,
-            }).result;
+            let imageUrl = initialData?.imageUrl || '';
 
-            // 2. Construct CloudFront URL
-            const imageUrl = `${CLOUDFRONT_DOMAIN}/${filePath}`;
+            // 1. Upload to S3 if a new file is selected
+            if (file) {
+                const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+                const filePath = `media/${fileName}`;
+
+                await uploadData({
+                    path: filePath,
+                    data: file,
+                }).result;
+
+                // 2. Construct CloudFront URL
+                imageUrl = `${CLOUDFRONT_DOMAIN}/${filePath}`;
+            }
 
             // 3. Save metadata to DynamoDB via Server Action
-            const result = await createProduct({
-                name: data.name,
-                price: Number(data.price),
-                description: data.description,
-                category: data.category,
-                imageUrl: imageUrl,
-            });
+            let result;
+            if (initialData) {
+                result = await updateProduct({
+                    id: initialData.id,
+                    name: data.name,
+                    price: Number(data.price),
+                    description: data.description,
+                    category: data.category,
+                    imageUrl: imageUrl,
+                });
+            } else {
+                result = await createProduct({
+                    name: data.name,
+                    price: Number(data.price),
+                    description: data.description,
+                    category: data.category,
+                    imageUrl: imageUrl,
+                });
+            }
 
             if (result.success) {
-                setStatus({ type: 'success', message: 'Product uploaded successfully!' });
-                reset();
-                setFile(null);
-                setPreview(null);
+                setStatus({ type: 'success', message: initialData ? 'Product updated successfully!' : 'Product uploaded successfully!' });
+                if (!initialData) {
+                    reset();
+                    setFile(null);
+                    setPreview(null);
+                } else {
+                    // Refresh preview in case image changed
+                    if (imageUrl) setPreview(imageUrl);
+                }
                 if (onSuccess) onSuccess();
             } else {
                 setStatus({ type: 'error', message: `Error: ${result.error}` });
@@ -199,10 +232,10 @@ export default function ProductUpload({ onSuccess }: ProductUploadProps) {
                 >
                     {uploading ? (
                         <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading Product
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {initialData ? 'Updating...' : 'Uploading Product'}
                         </>
                     ) : (
-                        'Upload Product'
+                        initialData ? 'Update Product' : 'Upload Product'
                     )}
                 </Button>
 

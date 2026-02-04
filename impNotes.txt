@@ -1,0 +1,1 @@
+*Products table is hardcoded and named as "Products" in the database and the codebase.

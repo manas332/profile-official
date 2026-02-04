@@ -5,11 +5,11 @@ import { adminStore, ConsultationPackage, Product } from "@/lib/admin-store";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Trash2, Package, ShoppingBag, Plus, ExternalLink, LogOut } from "lucide-react";
+import { deleteProduct, getProducts } from "@/app/actions";
+import { Edit, LogOut, Package, Plus, ShoppingBag, Trash2, ExternalLink } from "lucide-react";
 import { logoutAdmin } from "./actions";
 import { useRouter } from "next/navigation";
 import ProductUpload from "@/components/ProductUpload";
-import { getProducts } from "@/app/actions";
 
 export default function AdminDashboard() {
     const router = useRouter();
@@ -17,6 +17,7 @@ export default function AdminDashboard() {
     const [packages, setPackages] = useState<ConsultationPackage[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [isAdding, setIsAdding] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
     // Form States
     const [pkgForm, setPkgForm] = useState({
@@ -39,9 +40,9 @@ export default function AdminDashboard() {
 
         // Fetch products from DynamoDB
         const result = await getProducts();
-        if (result.success && result.data) {
+        if (result.success && (result as any).data) {
             // Map DynamoDB items to Product interface if needed, or ensure they match
-            setProducts(result.data as Product[]);
+            setProducts((result as any).data as Product[]);
         }
     };
 
@@ -108,11 +109,11 @@ export default function AdminDashboard() {
                 </button>
             </div>
 
-            {isAdding ? (
+            {isAdding || editingProduct ? (
                 <Card className="bg-neutral-800 border-amber-900/30 mb-8 max-w-2xl">
                     <CardHeader>
                         <CardTitle className="text-amber-100">
-                            Add New {activeTab === "packages" ? "Package" : "Product"}
+                            {editingProduct ? "Edit Product" : `Add New ${activeTab === "packages" ? "Package" : "Product"}`}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -161,7 +162,7 @@ export default function AdminDashboard() {
                                     onChange={(e) => setPkgForm({ ...pkgForm, features: e.target.value })}
                                 />
                                 <div className="flex gap-2 justify-end">
-                                    <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
+                                    <Button type="button" variant="outline" onClick={() => { setIsAdding(false); setEditingProduct(null); }}>
                                         Cancel
                                     </Button>
                                     <Button type="submit" className="bg-amber-600 hover:bg-amber-700">
@@ -171,12 +172,16 @@ export default function AdminDashboard() {
                             </form>
                         ) : (
                             <div className="space-y-4">
-                                <ProductUpload onSuccess={() => {
-                                    setIsAdding(false);
-                                    refreshData();
-                                }} />
+                                <ProductUpload
+                                    initialData={editingProduct}
+                                    onSuccess={() => {
+                                        setIsAdding(false);
+                                        setEditingProduct(null);
+                                        refreshData();
+                                    }}
+                                />
                                 <div className="flex justify-end">
-                                    <Button variant="outline" onClick={() => setIsAdding(false)}>
+                                    <Button variant="outline" onClick={() => { setIsAdding(false); setEditingProduct(null); }}>
                                         Cancel
                                     </Button>
                                 </div>
@@ -280,14 +285,30 @@ export default function AdminDashboard() {
                                             </a>
                                         </div>
                                     )}
-                                    <div className="flex justify-end pt-2 border-t border-amber-900/20">
+
+                                    <div className="flex justify-end pt-2 border-t border-amber-900/20 gap-2">
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => {
+                                                setEditingProduct(prod);
+                                                setActiveTab("products"); // Ensure we are on the tab (though we must be to click this)
+                                            }}
+                                            className="text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 border-transparent shadow-none"
+                                        >
+                                            <Edit className="w-4 h-4 mr-2" /> Edit
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={async () => {
                                                 if (confirm('Are you sure you want to delete this product?')) {
-                                                    adminStore.deleteProduct(prod.id);
-                                                    refreshData();
+                                                    const result = await deleteProduct(prod.id);
+                                                    if (result.success) {
+                                                        refreshData();
+                                                    } else {
+                                                        alert("Failed to delete product: " + result.error);
+                                                    }
                                                 }
                                             }}
                                             className="text-red-400 hover:text-red-300 hover:bg-red-900/20 border-transparent shadow-none"
