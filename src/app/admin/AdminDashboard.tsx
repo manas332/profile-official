@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Trash2, Package, ShoppingBag, Plus, ExternalLink, LogOut } from "lucide-react";
 import { logoutAdmin } from "./actions";
 import { useRouter } from "next/navigation";
+import ProductUpload from "@/components/ProductUpload";
 
 export default function AdminDashboard() {
     const router = useRouter();
@@ -22,15 +23,6 @@ export default function AdminDashboard() {
         price: "",
         description: "",
         features: "",
-        imageUrl: "",
-        link: ""
-    });
-
-    const [prodForm, setProdForm] = useState({
-        name: "",
-        price: "",
-        description: "",
-        category: "",
         imageUrl: "",
         link: ""
     });
@@ -60,21 +52,6 @@ export default function AdminDashboard() {
             link: pkgForm.link
         });
         setPkgForm({ title: "", price: "", description: "", features: "", imageUrl: "", link: "" });
-        setIsAdding(false);
-        refreshData();
-    };
-
-    const handleAddProduct = (e: React.FormEvent) => {
-        e.preventDefault();
-        adminStore.addProduct({
-            name: prodForm.name,
-            price: Number(prodForm.price),
-            description: prodForm.description,
-            category: prodForm.category,
-            imageUrl: prodForm.imageUrl,
-            link: prodForm.link
-        });
-        setProdForm({ name: "", price: "", description: "", category: "", imageUrl: "", link: "" });
         setIsAdding(false);
         refreshData();
     };
@@ -184,61 +161,17 @@ export default function AdminDashboard() {
                                 </div>
                             </form>
                         ) : (
-                            <form onSubmit={handleAddProduct} className="space-y-4">
-                                <Input
-                                    className="bg-neutral-900/50 border-amber-900/30 text-amber-100"
-                                    placeholder="Product Name"
-                                    value={prodForm.name}
-                                    onChange={(e) => setProdForm({ ...prodForm, name: e.target.value })}
-                                    required
-                                />
-                                <div className="flex gap-4">
-                                    <Input
-                                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100"
-                                        type="number"
-                                        placeholder="Price (₹)"
-                                        value={prodForm.price}
-                                        onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
-                                        required
-                                    />
-                                    <Input
-                                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100"
-                                        placeholder="Category"
-                                        value={prodForm.category}
-                                        onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="flex gap-4">
-                                    <Input
-                                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100 w-full"
-                                        placeholder="Image URL"
-                                        value={prodForm.imageUrl}
-                                        onChange={(e) => setProdForm({ ...prodForm, imageUrl: e.target.value })}
-                                    />
-                                    <Input
-                                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100 w-full"
-                                        placeholder="External Purchase Link (Optional)"
-                                        value={prodForm.link}
-                                        onChange={(e) => setProdForm({ ...prodForm, link: e.target.value })}
-                                    />
-                                </div>
-                                <textarea
-                                    className="w-full bg-neutral-900/50 border border-amber-900/30 text-amber-100 rounded-md p-3 min-h-[100px] focus:outline-none focus:ring-1 focus:ring-amber-500/50"
-                                    placeholder="Description"
-                                    value={prodForm.description}
-                                    onChange={(e) => setProdForm({ ...prodForm, description: e.target.value })}
-                                    required
-                                />
-                                <div className="flex gap-2 justify-end">
-                                    <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
+                            <div className="space-y-4">
+                                <ProductUpload onSuccess={() => {
+                                    setIsAdding(false);
+                                    refreshData();
+                                }} />
+                                <div className="flex justify-end">
+                                    <Button variant="outline" onClick={() => setIsAdding(false)}>
                                         Cancel
                                     </Button>
-                                    <Button type="submit" className="bg-amber-600 hover:bg-amber-700">
-                                        Save Product
-                                    </Button>
                                 </div>
-                            </form>
+                            </div>
                         )}
                     </CardContent>
                 </Card>
@@ -252,7 +185,6 @@ export default function AdminDashboard() {
                 </Button>
             )}
 
-            {/* List Display */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activeTab === "packages" ? (
                     packages.length === 0 ? (
