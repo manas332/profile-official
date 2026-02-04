@@ -20,7 +20,7 @@ type ProductFormInputs = {
 };
 
 // Replace with your actual CloudFront domain
-const CLOUDFRONT_DOMAIN = 'https://d2y2j035sjmlka.cloudfront.net';
+const CLOUDFRONT_DOMAIN = 'https://d1gim5ov894p9a.cloudfront.net';
 
 interface ProductUploadProps {
     onSuccess?: () => void;

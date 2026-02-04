@@ -5,7 +5,13 @@ import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 // Initialize DynamoDB Client
-const client = new DynamoDBClient({});
+const client = new DynamoDBClient({
+    region: process.env.APP_AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY || '',
+    },
+});
 const docClient = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = 'Products'; // Ensure this matches your actual table name
@@ -44,5 +50,21 @@ export async function createProduct(input: CreateProductInput): Promise<{ succes
     } catch (error) {
         console.error('DynamoDB Write Error:', error);
         return { success: false, error: 'Failed to save product metadata.' };
+    }
+}
+
+import { ScanCommand } from '@aws-sdk/lib-dynamodb';
+
+export async function getProducts() {
+    try {
+        // Warning: Scan is expensive for large tables. Use Query if possible in production.
+        const command = new ScanCommand({
+            TableName: TABLE_NAME,
+        });
+        const result = await docClient.send(command);
+        return { success: true, data: result.Items || [] };
+    } catch (error) {
+        console.error('DynamoDB Scan Error:', error);
+        return { success: false, error: 'Failed to fetch products.' };
     }
 }

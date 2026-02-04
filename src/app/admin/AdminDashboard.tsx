@@ -9,6 +9,7 @@ import { Trash2, Package, ShoppingBag, Plus, ExternalLink, LogOut } from "lucide
 import { logoutAdmin } from "./actions";
 import { useRouter } from "next/navigation";
 import ProductUpload from "@/components/ProductUpload";
+import { getProducts } from "@/app/actions";
 
 export default function AdminDashboard() {
     const router = useRouter();
@@ -27,13 +28,21 @@ export default function AdminDashboard() {
         link: ""
     });
 
+    // ... inside AdminDashboard ...
+
     useEffect(() => {
         refreshData();
     }, []);
 
-    const refreshData = () => {
+    const refreshData = async () => {
         setPackages(adminStore.getPackages());
-        setProducts(adminStore.getProducts());
+
+        // Fetch products from DynamoDB
+        const result = await getProducts();
+        if (result.success && result.data) {
+            // Map DynamoDB items to Product interface if needed, or ensure they match
+            setProducts(result.data as Product[]);
+        }
     };
 
     const handleLogout = async () => {

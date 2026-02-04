@@ -1,3 +1,56 @@
 {
+  "auth": {
+    "user_pool_id": "ap-south-1_K0LGJ5RUH",
+    "aws_region": "ap-south-1",
+    "user_pool_client_id": "2kk0br240iekimmrqtv14s9f84",
+    "identity_pool_id": "ap-south-1:e1ca3d5f-2afe-42a8-8bb5-cb7b749f5990",
+    "mfa_methods": [],
+    "standard_required_attributes": [
+      "email"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "groups": [],
+    "mfa_configuration": "NONE",
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": true,
+      "require_uppercase": true
+    },
+    "unauthenticated_identities_enabled": true
+  },
+  "storage": {
+    "aws_region": "ap-south-1",
+    "bucket_name": "amplify-profilepageactual-hp-s-drivebucket92e67ee0-1hroaxvstj9y",
+    "buckets": [
+      {
+        "name": "drive",
+        "bucket_name": "amplify-profilepageactual-hp-s-drivebucket92e67ee0-1hroaxvstj9y",
+        "aws_region": "ap-south-1",
+        "paths": {
+          "media/*": {
+            "authenticated": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ],
+            "guest": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          }
+        }
+      }
+    ]
+  },
   "version": "1.4"
 }
