@@ -24,7 +24,7 @@ type ProductFormInputs = {
 const CLOUDFRONT_DOMAIN = 'https://d1gim5ov894p9a.cloudfront.net';
 
 interface ProductUploadProps {
-    onSuccess?: () => void;
+    onSuccess?: (product?: Product) => void;
     initialData?: Product | null;
 }
 

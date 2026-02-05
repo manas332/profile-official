@@ -3,7 +3,9 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function HeroSection() {
+export default function HeroSection({ name, description, photoUrl }: { name: string, description: string, photoUrl: string }) {
+  // Process description for desktop view
+  const paragraphs = description ? description.split('\n\n') : [];
   return (
     <section className="max-w-7xl mx-auto px-6 py-10 md:py-16">
       <div className="grid grid-cols-2 md:grid-cols-2 gap-6 md:gap-12 md:items-stretch">
@@ -22,7 +24,8 @@ export default function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Pandit Sharma
+
+              {name}
             </motion.h1>
             <motion.p
               className="text-base sm:text-xl text-gray-600"
@@ -40,18 +43,13 @@ export default function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <p>
-                With over 15 years of dedicated practice in Vedic Astrology, Pandit Sharma has helped thousands
-                of individuals navigate life's challenges and opportunities. His deep understanding of planetary
-                positions, birth charts, and cosmic energies enables him to provide accurate predictions and
-                practical remedies.
-              </p>
-              <p>
-                Specializing in personalized Kundli readings, he offers insights into career progression,
-                relationship compatibility, health concerns, and spiritual development. His approach combines
-                traditional Vedic wisdom with contemporary understanding, making ancient knowledge accessible
-                and applicable to modern life.
-              </p>
+              {paragraphs.length > 0 ? (
+                paragraphs.map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))
+              ) : (
+                <p>Loading...</p>
+              )}
             </motion.div>
           </div>
         </motion.div>
@@ -69,8 +67,8 @@ export default function HeroSection() {
             transition={{ duration: 0.3 }}
           >
             <Image
-              src="/astro-img.jpg"
-              alt="Pandit Sharma - Vedic Astrologer"
+              src={photoUrl || "/astro-img.jpg"}
+              alt={`${name} - Vedic Astrologer`}
               width={600}
               height={800}
               className="w-full h-full object-cover"

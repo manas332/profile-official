@@ -27,7 +27,7 @@ export default function PanchangCard() {
 
   return (
     <section className="max-w-7xl mx-auto px-6 pt-8 pb-8">
-      <motion.div 
+      <motion.div
         className="space-y-4"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}

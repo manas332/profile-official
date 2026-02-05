@@ -1,1 +1,12 @@
 *Products table is hardcoded and named as "Products" in the database and the codebase.
+
+Tasks for tomorrow:
+1.) Add environment variables for admin password and maybe products table name on amplify
+2.) Beautify the UI of the main and admin pages
+3.) Add admin page functionality to change name description and consultation packages
+4.) This project will further grow into a full fledged website for astrologer
+/astro will be /{generic name} and /{generic name}/admin will be in control of that particular astrologer and no one else
+5.) /superadmin will verify the astrologers and will be able to add/remove astrologers
+(To do all the setup of a new astrologer and maintain and observe the profile of all astrologers)
+6.) Products will be different for each astrologer and will be managed by the admin of that particular astrologer (Will I require a seperate table for each astrologer or manage it with same table with a different sort key)
+7.) 

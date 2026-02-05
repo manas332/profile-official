@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 
-interface Package {
+export interface Package {
   duration: string;
   title: string;
   price: string;
@@ -14,30 +14,7 @@ interface Package {
   popular?: boolean;
 }
 
-const packages: Package[] = [
-  {
-    duration: "15 Minutes",
-    title: "Quick Session",
-    price: "₹999",
-    description: "Ideal for 1 quick question and direction.",
-    features: ["Quick Question", "Basic Guidance"],
-  },
-  {
-    duration: "30 Minutes",
-    title: "Standard Session",
-    price: "₹1,999",
-    description: "Detailed guidance with kundli-based insights.",
-    features: ["Detailed Analysis", "Kundli Reading", "Remedy Suggestions"],
-    popular: true,
-  },
-  {
-    duration: "60 Minutes",
-    title: "Premium Session",
-    price: "₹3,499",
-    description: "Complete, in-depth analysis with remedies.",
-    features: ["Complete Kundli Analysis", "Gemstone Consultation", "Detailed Remedies"],
-  },
-];
+
 
 function useMediaQuery(query: string) {
   return useSyncExternalStore(
@@ -51,12 +28,15 @@ function useMediaQuery(query: string) {
   );
 }
 
-export default function ConsultationPackages() {
+export default function ConsultationPackages({ packages }: { packages: Package[] }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  // Use default/loading state if packages are undefined
+  if (!packages) return null;
 
   return (
     <section id="consultation-packages" className="max-w-7xl mx-auto px-6 pt-8 pb-8">
-      <motion.div 
+      <motion.div
         className="text-center mb-12"
         initial={{ opacity: 0, y: -20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -72,11 +52,10 @@ export default function ConsultationPackages() {
           {packages.map((pkg, index) => (
             <motion.div
               key={index}
-              className={`bg-white rounded-2xl p-8 border-2 ${
-                pkg.popular
-                  ? "bg-linear-to-br from-amber-light to-amber-medium text-white text-outline-black-all shadow-2xl relative"
-                  : "border-amber-light shadow-lg"
-              }`}
+              className={`bg-white rounded-2xl p-8 border-2 ${pkg.popular
+                ? "bg-linear-to-br from-amber-light to-amber-medium text-white text-outline-black-all shadow-2xl relative"
+                : "border-amber-light shadow-lg"
+                }`}
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -134,11 +113,10 @@ export default function ConsultationPackages() {
           {packages.map((pkg, index) => (
             <motion.details
               key={index}
-              className={`group bg-white rounded-2xl border-2 overflow-hidden mx-auto w-full max-w-sm ${
-                pkg.popular
-                  ? "bg-linear-to-br from-amber-light to-amber-medium text-white text-outline-black-all shadow-2xl relative"
-                  : "border-amber-light shadow-lg"
-              }`}
+              className={`group bg-white rounded-2xl border-2 overflow-hidden mx-auto w-full max-w-sm ${pkg.popular
+                ? "bg-linear-to-br from-amber-light to-amber-medium text-white text-outline-black-all shadow-2xl relative"
+                : "border-amber-light shadow-lg"
+                }`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -166,9 +144,8 @@ export default function ConsultationPackages() {
                         {pkg.price}
                       </p>
                       <div
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${
-                          pkg.popular ? "bg-white/15 text-white" : "bg-amber-lightest text-amber-ink"
-                        }`}
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${pkg.popular ? "bg-white/15 text-white" : "bg-amber-lightest text-amber-ink"
+                          }`}
                       >
                         Tap for details
                         <svg

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Amplify } from "aws-amplify";
 import { Authenticator } from "@aws-amplify/ui-react";
-import outputs from "@/../amplify_outputs.json";
+import amplifyConfig from "@/lib/aws/amplify-config";
 import "@aws-amplify/ui-react/styles.css";
 
 export default function AmplifyProvider({ children }: { children: React.ReactNode }) {
@@ -12,7 +12,7 @@ export default function AmplifyProvider({ children }: { children: React.ReactNod
   useEffect(() => {
     // Configure Amplify on client-side only
     if (typeof window !== "undefined" && !configured) {
-      Amplify.configure(outputs);
+      Amplify.configure(amplifyConfig);
       setConfigured(true);
     }
   }, [configured]);
