@@ -3,7 +3,6 @@
 import React, { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
-import { uploadData } from 'aws-amplify/storage';
 import { createProduct, updateProduct } from '@/app/actions';
 import { Product } from '@/lib/admin-store';
 import Button from '@/components/ui/Button';
@@ -79,18 +78,22 @@ export default function ProductUpload({ onSuccess, initialData }: ProductUploadP
         try {
             let imageUrl = initialData?.imageUrl || '';
 
-            // 1. Upload to S3 if a new file is selected
+            // 1. Upload to S3 via server API if a new file is selected
             if (file) {
-                const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-                const filePath = `media/${fileName}`;
+                const formData = new FormData();
+                formData.append('file', file);
 
-                await uploadData({
-                    path: filePath,
-                    data: file,
-                }).result;
+                const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
 
-                // 2. Construct CloudFront URL
-                imageUrl = `${CLOUDFRONT_DOMAIN}/${filePath}`;
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload image');
+                }
+
+                const uploadResult = await uploadResponse.json();
+                imageUrl = uploadResult.url;
             }
 
             // 3. Save metadata to DynamoDB via Server Action
@@ -204,12 +207,19 @@ export default function ProductUpload({ onSuccess, initialData }: ProductUploadP
 
                 <div className="space-y-2">
                     <Label htmlFor="category" className="text-amber-100">Category</Label>
-                    <Input
+                    <select
                         id="category"
                         {...register('category', { required: true })}
-                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100 focus:border-amber-500/50"
-                        placeholder="e.g. Gemstones, Pooja Items"
-                    />
+                        className="w-full bg-neutral-900/50 border border-amber-900/30 text-amber-100 h-10 px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 transition-colors"
+                    >
+                        <option value="" disabled className="bg-neutral-900 text-amber-100/40">Select a category</option>
+                        <option value="gemstone" className="bg-neutral-900">Gemstone</option>
+                        <option value="crystal" className="bg-neutral-900">Crystal</option>
+                        <option value="bracelet" className="bg-neutral-900">Bracelet</option>
+                        <option value="rudraksh" className="bg-neutral-900">Rudraksh</option>
+                        <option value="pooja item" className="bg-neutral-900">Pooja Item</option>
+                        <option value="other" className="bg-neutral-900">Other</option>
+                    </select>
                     {errors.category && <span className="text-red-400 text-xs">Required</span>}
                 </div>
 

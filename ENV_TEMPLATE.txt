@@ -18,6 +18,9 @@ NEXT_PUBLIC_AWS_COGNITO_REDIRECT_URI=http://localhost:3000/api/auth/cognito/call
 NEXT_PUBLIC_AWS_COGNITO_SIGNOUT_URI=http://localhost:3000/login
 NEXT_PUBLIC_AWS_REGION=ap-south-1
 
+# AWS S3 (Client-side - for Amplify Storage)
+NEXT_PUBLIC_AWS_S3_BUCKET=your-s3-bucket-name
+
 # AWS SES
 AWS_SES_FROM_EMAIL=noreply@yourdomain.com
 AWS_SES_REGION=ap-south-1

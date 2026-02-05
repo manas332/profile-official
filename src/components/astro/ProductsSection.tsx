@@ -31,7 +31,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
         <p className="text-xl text-gray-600">Authentic gemstones and spiritual items</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
         {products.map((product) => (
           <motion.div
             key={product.id}

@@ -1,7 +1,7 @@
 'use server';
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, DeleteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, DeleteCommand, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 // Initialize DynamoDB Client
@@ -66,6 +66,24 @@ export async function getProducts() {
     } catch (error) {
         console.error('DynamoDB Scan Error:', error);
         return { success: false, error: 'Failed to fetch products.' };
+    }
+}
+
+export async function getProductById(id: string) {
+    try {
+        const params = {
+            TableName: TABLE_NAME,
+            Key: {
+                pk: `PRODUCT#${id}`,
+                sk: 'METADATA',
+            },
+        };
+
+        const result = await docClient.send(new GetCommand(params));
+        return { success: true, data: result.Item };
+    } catch (error) {
+        console.error('DynamoDB Get Error:', error);
+        return { success: false, error: 'Failed to fetch product details.' };
     }
 }
 

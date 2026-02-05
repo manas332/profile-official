@@ -5,6 +5,7 @@ import { SESClient } from "@aws-sdk/client-ses";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { CognitoIdentityProviderClient } from "@aws-sdk/client-cognito-identity-provider";
+import { S3Client } from "@aws-sdk/client-s3";
 
 // Validate AWS configuration
 if (!process.env.APP_AWS_REGION) {
@@ -27,11 +28,11 @@ const awsConfig = {
   region,
   ...(process.env.APP_AWS_ACCESS_KEY_ID && process.env.APP_AWS_SECRET_ACCESS_KEY
     ? {
-        credentials: {
-          accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
-        },
-      }
+      credentials: {
+        accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+      },
+    }
     : {}),
 };
 

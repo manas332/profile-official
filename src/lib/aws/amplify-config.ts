@@ -11,10 +11,10 @@ if (!process.env.NEXT_PUBLIC_APP_AWS_COGNITO_CLIENT_ID) {
   console.warn("NEXT_PUBLIC_APP_AWS_COGNITO_CLIENT_ID is not set");
 }
 
-const redirectSignIn = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_REDIRECT_URI || 
+const redirectSignIn = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_REDIRECT_URI ||
   (typeof window !== "undefined" ? `${window.location.origin}/api/auth/cognito/callback` : "");
 
-const redirectSignOut = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_SIGNOUT_URI || 
+const redirectSignOut = process.env.NEXT_PUBLIC_APP_AWS_COGNITO_SIGNOUT_URI ||
   (typeof window !== "undefined" ? `${window.location.origin}/login` : "");
 
 const amplifyConfig = {
