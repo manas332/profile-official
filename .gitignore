@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+imgLink.txt
+products.json
+images/
+imagesA/
+seed-products.js
+upload-images.js

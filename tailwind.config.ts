@@ -8,6 +8,9 @@ const config: Config = {
   ],
   // Note: Tailwind v4 uses @theme in CSS for colors
   // Colors are defined in globals.css
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };
 
 export default config;

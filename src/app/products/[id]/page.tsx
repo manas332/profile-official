@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ShoppingBag } from "lucide-react";
 import Button from "@/components/ui/Button";
+import ReactMarkdown from "react-markdown";
 
 interface ProductDetailPageProps {
     params: Promise<{
@@ -77,9 +78,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                         <div className="border-t border-slate-100 pt-8">
                             <h2 className="text-sm uppercase tracking-widest text-slate-400 font-bold mb-4">Description</h2>
                             <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed text-lg">
-                                {product.description.split('\n').map((para: string, i: number) => (
-                                    <p key={i} className="mb-4">{para}</p>
-                                ))}
+                                <ReactMarkdown>{product.description}</ReactMarkdown>
                             </div>
                         </div>
 
