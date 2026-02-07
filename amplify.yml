@@ -12,6 +12,7 @@ frontend:
         - env | grep -e NEXT_PUBLIC_ >> .env.production || true
         - env | grep -e APP_AWS_ >> .env.production || true
         - env | grep -e RESEND_API_KEY >> .env.production || true
+        - env | grep -e ADMIN_PASSWORD >> .env.production || true
         - npm run build
   artifacts:
     baseDirectory: .next
