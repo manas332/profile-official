@@ -22,6 +22,16 @@ type CreateProductInput = {
     description: string;
     category: string;
     imageUrl: string;
+    // New Fields
+    benefits?: string[];
+    zodiac?: string[];
+    rashi?: string[];
+    chakra?: string;
+    planet?: string;
+    element?: string;
+    ritual?: string;
+    isEnergized?: boolean;
+    certification?: string;
 };
 
 export async function createProduct(input: CreateProductInput): Promise<{ success: boolean; error?: string }> {
@@ -39,6 +49,18 @@ export async function createProduct(input: CreateProductInput): Promise<{ succes
             description: input.description,
             category: input.category,
             imageUrl: input.imageUrl,
+
+            // New Fields
+            benefits: input.benefits || [],
+            zodiac: input.zodiac || [],
+            rashi: input.rashi || [],
+            chakra: input.chakra || null,
+            planet: input.planet || null,
+            element: input.element || null,
+            ritual: input.ritual || null,
+            isEnergized: input.isEnergized || false,
+            certification: input.certification || null,
+
             createdAt: timestamp,
             updatedAt: timestamp,
         },
@@ -55,21 +77,23 @@ export async function createProduct(input: CreateProductInput): Promise<{ succes
 
 import { ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-export async function getProducts() {
+import { Product } from '@/types/product';
+
+export async function getProducts(): Promise<{ success: boolean; data?: Product[]; error?: string }> {
     try {
         // Warning: Scan is expensive for large tables. Use Query if possible in production.
         const command = new ScanCommand({
             TableName: TABLE_NAME,
         });
         const result = await docClient.send(command);
-        return { success: true, data: result.Items || [] };
+        return { success: true, data: (result.Items as Product[]) || [] };
     } catch (error) {
         console.error('DynamoDB Scan Error:', error);
         return { success: false, error: 'Failed to fetch products.' };
     }
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string): Promise<{ success: boolean; data?: Product; error?: string }> {
     try {
         const params = {
             TableName: TABLE_NAME,
@@ -80,7 +104,7 @@ export async function getProductById(id: string) {
         };
 
         const result = await docClient.send(new GetCommand(params));
-        return { success: true, data: result.Item };
+        return { success: true, data: result.Item as Product };
     } catch (error) {
         console.error('DynamoDB Get Error:', error);
         return { success: false, error: 'Failed to fetch product details.' };
@@ -108,28 +132,13 @@ export async function deleteProduct(productId: string): Promise<{ success: boole
 export async function updateProduct(product: CreateProductInput & { id: string }): Promise<{ success: boolean; error?: string }> {
     const timestamp = new Date().toISOString();
 
-    // We need to fetch the existing item to preserve createdAt field or we can just accept it's a replacement
-    // For simplicity, we'll do a PutCommand which overwrites. 
-    // Ideally we should use UpdateCommand but that requires constructing update expression dynamically.
-    // To preserve createdAt, we really should fetch first or use UpdateExpression.
-    // Let's use PutCommand but try to preserve what we can if we had the original data, 
-    // but since we don't pass original createdAt, let's just update updatedAt.
-
-    // Better approach: Use UpdateCommand to only update changed fields? 
-    // Or just overwrite everything but keep the PK/SK/ID. 
-
-    // Let's use a simpler approach for now: Overwrite but we need to know the original createdAt?
-    // Actually, let's just use the current time for updatedAt and if we lose original createdAt it's not the end of the world for this app,
-    // BUT checking CreateProductInput, it doesn't have createdAt.
-    // Let's try to do it right with UpdateCommand.
-
     const params = {
         TableName: TABLE_NAME,
         Key: {
             pk: `PRODUCT#${product.id}`,
             sk: 'METADATA',
         },
-        UpdateExpression: 'set #name = :name, price = :price, description = :description, category = :category, imageUrl = :imageUrl, updatedAt = :updatedAt',
+        UpdateExpression: 'set #name = :name, price = :price, description = :description, category = :category, imageUrl = :imageUrl, benefits = :benefits, zodiac = :zodiac, rashi = :rashi, chakra = :chakra, planet = :planet, element = :element, ritual = :ritual, isEnergized = :isEnergized, certification = :certification, updatedAt = :updatedAt',
         ExpressionAttributeNames: {
             '#name': 'name',
         },
@@ -139,6 +148,15 @@ export async function updateProduct(product: CreateProductInput & { id: string }
             ':description': product.description,
             ':category': product.category,
             ':imageUrl': product.imageUrl,
+            ':benefits': product.benefits || [],
+            ':zodiac': product.zodiac || [],
+            ':rashi': product.rashi || [],
+            ':chakra': product.chakra || null,
+            ':planet': product.planet || null,
+            ':element': product.element || null,
+            ':ritual': product.ritual || null,
+            ':isEnergized': product.isEnergized || false,
+            ':certification': product.certification || null,
             ':updatedAt': timestamp,
         },
     };

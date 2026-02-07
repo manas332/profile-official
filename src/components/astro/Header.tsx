@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import CartIcon from "@/components/CartIcon";
 
 declare global {
   interface Window {
@@ -60,10 +61,11 @@ export default function Header() {
   };
 
   const navLinks = [
-    { name: "Home", href: "#" },
-    { name: "Services", href: "#consultation-packages" },
-    { name: "Products", href: "#products" },
-    { name: "About", href: "#about" },
+    { name: "Home", href: "/" },
+    { name: "Services", href: "/#consultation-packages" },
+    { name: "Products", href: "/products" },
+    { name: "Profile", href: "/profile" },
+    { name: "About", href: "/#about" },
   ];
 
   return (
@@ -96,6 +98,9 @@ export default function Header() {
               {link.name}
             </a>
           ))}
+          <div className="ml-4">
+            <CartIcon />
+          </div>
           <button
             onClick={signOut}
             className="px-4 py-1.5 text-sm bg-red-50 text-red-600 border border-red-100 rounded-full hover:bg-red-100 transition-colors font-medium ml-4"
@@ -108,6 +113,11 @@ export default function Header() {
         <div className="flex items-center gap-4">
           {/* Language Selector */}
           <div id="google_translate_element" className="google-translate-container"></div>
+
+          {/* Mobile Cart & Menu */}
+          <div className="md:hidden flex items-center gap-3">
+            <CartIcon />
+          </div>
 
           {/* Mobile Menu Button */}
           <button
