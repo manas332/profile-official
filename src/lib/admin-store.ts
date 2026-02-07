@@ -13,16 +13,6 @@ export interface ConsultationPackage {
     createdAt: string;
 }
 
-export interface Product {
-    id: string;
-    name: string;
-    price: number;
-    description: string;
-    category: string;
-    imageUrl?: string;
-    link?: string;
-    createdAt: string;
-}
 
 const PACKAGES_KEY = 'admin_packages';
 

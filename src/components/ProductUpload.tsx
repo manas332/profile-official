@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
 import { createProduct, updateProduct } from '@/app/actions';
-import { Product } from '@/lib/admin-store';
+import { Product } from '@/types/product';
 import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,16 @@ type ProductFormInputs = {
     price: number;
     category: string;
     description: string;
+    // New Fields
+    benefits: string; // Text input, will split by comma
+    zodiac: string;
+    rashi: string;
+    chakra: string;
+    planet: string;
+    element: string;
+    ritual: string;
+    isEnergized: boolean;
+    certification: string;
 };
 
 // Replace with your actual CloudFront domain
@@ -48,6 +58,17 @@ export default function ProductUpload({ onSuccess, initialData }: ProductUploadP
             setValue('price', initialData.price);
             setValue('category', initialData.category);
             setValue('description', initialData.description);
+            // Set new fields if they exist
+            setValue('benefits', initialData.benefits?.join(', ') || '');
+            setValue('zodiac', initialData.zodiac?.join(', ') || '');
+            setValue('rashi', initialData.rashi?.join(', ') || '');
+            setValue('chakra', initialData.chakra || '');
+            setValue('planet', initialData.planet || '');
+            setValue('element', initialData.element || '');
+            setValue('ritual', initialData.ritual || '');
+            setValue('isEnergized', initialData.isEnergized || false);
+            setValue('certification', initialData.certification || '');
+
             if (initialData.imageUrl) setPreview(initialData.imageUrl);
         }
     }, [initialData, setValue]);
@@ -96,25 +117,36 @@ export default function ProductUpload({ onSuccess, initialData }: ProductUploadP
                 imageUrl = uploadResult.url;
             }
 
+            // Helper to split comma strings
+            const toArray = (str: string) => str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
+
             // 3. Save metadata to DynamoDB via Server Action
             let result;
+            const productData = {
+                name: data.name,
+                price: Number(data.price),
+                description: data.description,
+                category: data.category,
+                imageUrl: imageUrl,
+                // New Fields
+                benefits: toArray(data.benefits),
+                zodiac: toArray(data.zodiac),
+                rashi: toArray(data.rashi),
+                chakra: data.chakra,
+                planet: data.planet,
+                element: data.element,
+                ritual: data.ritual,
+                isEnergized: data.isEnergized,
+                certification: data.certification,
+            };
+
             if (initialData) {
                 result = await updateProduct({
                     id: initialData.id,
-                    name: data.name,
-                    price: Number(data.price),
-                    description: data.description,
-                    category: data.category,
-                    imageUrl: imageUrl,
+                    ...productData
                 });
             } else {
-                result = await createProduct({
-                    name: data.name,
-                    price: Number(data.price),
-                    description: data.description,
-                    category: data.category,
-                    imageUrl: imageUrl,
-                });
+                result = await createProduct(productData);
             }
 
             if (result.success) {
@@ -179,7 +211,7 @@ export default function ProductUpload({ onSuccess, initialData }: ProductUploadP
                     </div>
                 </div>
 
-                {/* Input Fields */}
+                {/* Basic Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-amber-100">Product Name</Label>
@@ -223,15 +255,81 @@ export default function ProductUpload({ onSuccess, initialData }: ProductUploadP
                     {errors.category && <span className="text-red-400 text-xs">Required</span>}
                 </div>
 
+                {/* Mystical Details - New Section */}
+                <div className="p-4 bg-neutral-900/30 rounded-xl border border-amber-900/20 space-y-4">
+                    <h3 className="text-amber-200 font-serif text-lg border-b border-amber-900/20 pb-2">Mystical Attributes</h3>
+
+                    <div className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            id="isEnergized"
+                            {...register('isEnergized')}
+                            className="w-4 h-4 rounded border-amber-500 text-amber-600 focus:ring-amber-500 focus:ring-offset-neutral-900"
+                        />
+                        <Label htmlFor="isEnergized" className="text-amber-100 cursor-pointer">Energized by Pandit Ji (Pran Pratishtha)</Label>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="planet" className="text-amber-100">Planet (Graha)</Label>
+                            <Input id="planet" {...register('planet')} className="bg-neutral-900/50 border-amber-900/30 text-amber-100" placeholder="e.g. Saturn" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="chakra" className="text-amber-100">Chakra</Label>
+                            <Input id="chakra" {...register('chakra')} className="bg-neutral-900/50 border-amber-900/30 text-amber-100" placeholder="e.g. Root Chakra" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="element" className="text-amber-100">Element</Label>
+                            <Input id="element" {...register('element')} className="bg-neutral-900/50 border-amber-900/30 text-amber-100" placeholder="e.g. Fire" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="zodiac" className="text-amber-100">Zodiac (Comma sep)</Label>
+                            <Input id="zodiac" {...register('zodiac')} className="bg-neutral-900/50 border-amber-900/30 text-amber-100" placeholder="Leo, Aries" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="rashi" className="text-amber-100">Rashi (Comma sep)</Label>
+                            <Input id="rashi" {...register('rashi')} className="bg-neutral-900/50 border-amber-900/30 text-amber-100" placeholder="Mesh, Vrishabha" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Text Areas */}
                 <div className="space-y-2">
-                    <Label htmlFor="description" className="text-amber-100">Description</Label>
+                    <Label htmlFor="benefits" className="text-amber-100">Benefits (Comma separated)</Label>
+                    <Textarea
+                        id="benefits"
+                        {...register('benefits')}
+                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100 min-h-[80px]"
+                        placeholder="Attracts wealth, Protects from negativity..."
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="description" className="text-amber-100">Full Description (Markdown)</Label>
                     <Textarea
                         id="description"
                         {...register('description', { required: true })}
-                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100 min-h-[120px] focus:border-amber-500/50"
-                        placeholder="Describe the product..."
+                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100 min-h-[120px]"
+                        placeholder="Detailed story and description..."
                     />
-                    {errors.description && <span className="text-red-400 text-xs">Required</span>}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="ritual" className="text-amber-100">Ritual / Vidhi</Label>
+                    <Textarea
+                        id="ritual"
+                        {...register('ritual')}
+                        className="bg-neutral-900/50 border-amber-900/30 text-amber-100 min-h-[80px]"
+                        placeholder="How to wear, best day/time..."
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="certification" className="text-amber-100">Certification Details</Label>
+                    <Input id="certification" {...register('certification')} className="bg-neutral-900/50 border-amber-900/30 text-amber-100" placeholder="Lab Name / Cert ID" />
                 </div>
 
                 {/* Action Buttons */}
