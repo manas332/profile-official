@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { adminStore, ConsultationPackage, Product } from "@/lib/admin-store";
+import { adminStore, ConsultationPackage } from "@/lib/admin-store";
+import { Product } from "@/types/product";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -162,13 +163,7 @@ export default function AdminDashboard() {
                                     </CardHeader>
                                     <CardContent>
                                         <p className="text-amber-200/60 text-sm mb-4 line-clamp-3">{prod.description}</p>
-                                        {prod.link && (
-                                            <div className="mb-4">
-                                                <a href={prod.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
-                                                    <ExternalLink className="w-3 h-3" /> View Link
-                                                </a>
-                                            </div>
-                                        )}
+
 
                                         <div className="flex justify-end pt-2 border-t border-amber-900/20 gap-2">
                                             <Button
