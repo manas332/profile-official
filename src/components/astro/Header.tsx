@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +16,7 @@ declare global {
 }
 
 export default function Header() {
-  const { signOut } = useAuth();
+  const { signOut, isAuthenticated } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -101,12 +102,21 @@ export default function Header() {
           <div className="ml-4">
             <CartIcon />
           </div>
-          <button
-            onClick={signOut}
-            className="px-4 py-1.5 text-sm bg-red-50 text-red-600 border border-red-100 rounded-full hover:bg-red-100 transition-colors font-medium ml-4"
-          >
-            Logout
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={signOut}
+              className="px-4 py-1.5 text-sm bg-red-50 text-red-600 border border-red-100 rounded-full hover:bg-red-100 transition-colors font-medium ml-4"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="px-6 py-2 text-sm bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-medium ml-4 shadow-md hover:shadow-lg"
+            >
+              Login
+            </Link>
+          )}
         </nav>
 
         {/* Right Side: Language & Mobile Toggle */}
@@ -151,15 +161,25 @@ export default function Header() {
                 </a>
               ))}
               <hr className="border-gray-200" />
-              <button
-                onClick={() => {
-                  signOut();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors font-medium"
-              >
-                Logout
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    signOut();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors font-medium"
+                >
+                  Logout
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full text-left px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors font-medium"
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

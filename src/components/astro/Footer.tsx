@@ -11,20 +11,7 @@ export default function Footer() {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
 
-  const [isAdminAccessVisible, setIsAdminAccessVisible] = React.useState(false);
 
-  React.useEffect(() => {
-    const checkAccess = async () => {
-      try {
-        const { checkUserDomain } = await import('../../app/check-auth');
-        const hasAccess = await checkUserDomain();
-        setIsAdminAccessVisible(hasAccess);
-      } catch (e) {
-        console.error("Failed to check admin access", e);
-      }
-    };
-    checkAccess();
-  }, []);
 
   return (
     <footer className="bg-[#232323] text-white">
@@ -77,13 +64,7 @@ export default function Footer() {
                   FAQ
                 </a>
               </li>
-              {isAdminAccessVisible && (
-                <li>
-                  <a href="/admin" className="text-amber-500 hover:text-amber-400 transition-colors text-sm font-semibold flex items-center gap-1">
-                    <Shield className="w-3 h-3" /> ADMIN_ACCESS
-                  </a>
-                </li>
-              )}
+
             </ul>
           </div>
 

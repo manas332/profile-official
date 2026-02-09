@@ -11,6 +11,14 @@ import { User } from "@/types/auth";
 
 const USERS_TABLE = process.env.APP_AWS_DYNAMODB_USERS_TABLE || "users";
 const OTP_TABLE = process.env.APP_AWS_DYNAMODB_OTP_TABLE || "otp_codes";
+const CONSULTATION_ORDERS_TABLE = process.env.APP_AWS_DYNAMODB_CONSULTATION_ORDERS_TABLE || "consultation_orders";
+const PRODUCTS_TABLE = process.env.APP_AWS_DYNAMODB_PRODUCTS_TABLE || "product_orders";
+
+export const TABLE_NAMES = {
+  CONSULTATION: CONSULTATION_ORDERS_TABLE,
+  PRODUCTS: PRODUCTS_TABLE,
+};
+
 
 // Helper to convert DynamoDB item to User
 function itemToUser(item: any): User {
@@ -126,7 +134,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       console.warn(
         "⚠️ email-index GSI not found, using scan (inefficient). Please create GSI in DynamoDB."
       );
-      
+
       try {
         // Use ScanCommand when GSI doesn't exist
         const scanResult = await dynamoDocClient.send(
@@ -143,7 +151,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
         if (scanResult.Items && scanResult.Items.length > 0) {
           return itemToUser(scanResult.Items[0]);
         }
-        
+
         return null;
       } catch (scanError: any) {
         console.error("Error scanning DynamoDB table:", scanError);
@@ -156,7 +164,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
         throw scanError;
       }
     }
-    
+
     console.error("Error getting user by email from DynamoDB:", error);
     if (error.name === "ResourceNotFoundException") {
       console.error(
@@ -206,7 +214,7 @@ export async function updateUser(
     if (updateExpressions.length === 0) {
       throw new Error("Cannot update user: no valid fields to update");
     }
-    
+
     await dynamoDocClient.send(
       new UpdateCommand({
         TableName: USERS_TABLE,
@@ -318,5 +326,116 @@ export async function deleteOTP(email: string): Promise<void> {
   } catch (error: any) {
     console.error("Error deleting OTP:", error);
     // Don't throw - deletion is best effort
+  }
+}
+
+// Order Management
+
+export interface OrderItem {
+  id?: string;
+  name: string;
+  quantity: number;
+  price: number;
+  [key: string]: any;
+}
+
+export interface Order {
+  id: string; // Internal Order ID
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  userPhone?: string;
+  amount: number;
+  currency: string;
+  items?: OrderItem[];
+  status: 'created' | 'paid' | 'failed';
+  razorpayOrderId: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  astroId?: string; // For multi-tenancy
+  type?: string; // 'consultation' | 'product'
+  createdAt: string;
+  updatedAt: string;
+  shippingDetails?: any; // For products
+  consultationDetails?: any; // For consultation
+}
+
+export async function createOrder(tableName: string, orderArg: Order): Promise<void> {
+  try {
+    // Validate basic fields
+    if (!orderArg.id || !orderArg.amount || !orderArg.razorpayOrderId) {
+      throw new Error("Missing required order fields");
+    }
+
+    const order = {
+      ...orderArg,
+      createdAt: orderArg.createdAt || new Date().toISOString(),
+      updatedAt: orderArg.updatedAt || new Date().toISOString(),
+    };
+
+    await dynamoDocClient.send(
+      new PutCommand({
+        TableName: tableName,
+        Item: order,
+      })
+    );
+  } catch (error: any) {
+    console.error(`Error creating order in ${tableName}:`, error);
+    if (error.name === "ResourceNotFoundException") {
+      throw new Error(
+        `DynamoDB table "${tableName}" not found. Please create it in AWS Console.`
+      );
+    }
+    throw error;
+  }
+}
+
+export async function getOrder(tableName: string, orderId: string): Promise<Order | null> {
+  try {
+    const result = await dynamoDocClient.send(
+      new GetCommand({
+        TableName: tableName,
+        Key: { id: orderId },
+      })
+    );
+    return (result.Item as Order) || null;
+  } catch (error: any) {
+    console.error(`Error fetching order from ${tableName}:`, error);
+    return null;
+  }
+}
+
+export async function updateOrderStatus(
+  tableName: string,
+  orderId: string,
+  status: 'paid' | 'failed',
+  paymentDetails?: { razorpayPaymentId: string; razorpaySignature: string }
+): Promise<void> {
+  try {
+    let updateExpression = "set #status = :status, updatedAt = :updatedAt";
+    let expressionAttributeNames: any = { "#status": "status" };
+    let expressionAttributeValues: any = {
+      ":status": status,
+      ":updatedAt": new Date().toISOString()
+    };
+
+    if (paymentDetails) {
+      updateExpression += ", razorpayPaymentId = :pid, razorpaySignature = :sig";
+      expressionAttributeValues[":pid"] = paymentDetails.razorpayPaymentId;
+      expressionAttributeValues[":sig"] = paymentDetails.razorpaySignature;
+    }
+
+    await dynamoDocClient.send(
+      new UpdateCommand({
+        TableName: tableName,
+        Key: { id: orderId },
+        UpdateExpression: updateExpression,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+      })
+    );
+  } catch (error: any) {
+    console.error(`Error updating order status in ${tableName}:`, error);
+    throw error;
   }
 }

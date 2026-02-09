@@ -16,12 +16,8 @@ import { Product } from "@/types/product";
 export const dynamic = "force-dynamic";
 
 export default async function AstroPage() {
-  const session = await getSession();
+  // Public access - no session check required
 
-  // If not authenticated, redirect to login
-  if (!session) {
-    redirect("/login");
-  }
 
   // Fetch directly from DB instead of internal API to avoid network issues inside server component
   const astroData = await getAstroData();
