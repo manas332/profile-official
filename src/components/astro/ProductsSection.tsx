@@ -52,7 +52,7 @@ export default function ProductsSection({ products }: ProductsSectionProps) {
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.3 }}
       >
-        <Link href="/products">
+        <Link href="/astro/products">
           <Button variant="primary" size="lg">
             Browse All Products
           </Button>

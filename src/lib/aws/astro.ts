@@ -23,6 +23,7 @@ export interface AstroData {
     name: string;
     photoUrl: string;
     description: string;
+    aboutContent: string; // Rich content for the About page
     packages: ConsultationPackage[];
     quotes: string[];
     updatedAt: string;
@@ -35,6 +36,27 @@ const DEFAULT_ASTRO_DATA: AstroData = {
     description: `With over 15 years of dedicated practice in Vedic Astrology, Pandit Sharma has helped thousands of individuals navigate life's challenges and opportunities. His deep understanding of planetary positions, birth charts, and cosmic energies enables him to provide accurate predictions and practical remedies.
 
 Specializing in personalized Kundli readings, he offers insights into career progression, relationship compatibility, health concerns, and spiritual development. His approach combines traditional Vedic wisdom with contemporary understanding, making ancient knowledge accessible and applicable to modern life.`,
+    aboutContent: `# About Humara Pandit
+
+Humara Pandit is an online spiritual platform founded in 2024 in Bengaluru, India by Aditya Sharma and Divyam Kalra. We are dedicated to making spirituality accessible to everyone through modern technology while preserving ancient traditions.
+
+## Our Mission
+
+We serve as a bridge connecting individuals to India's sacred temples and spiritual wisdom. Our platform offers authentic, blessed products and rituals performed by trusted pandits to facilitate divine blessings and spiritual solutions for life's challenges.
+
+## What We Offer
+
+**Personalized Consultations**: Connect with certified astrologers for detailed kundli analysis, gemstone recommendations, and one-on-one video consultations. Discover your lucky stone based on your birth chart with our 100% authentic, lab-certified gemstones.
+
+**Sacred Products**: We offer energized crystals, authentic Rudraksha, and spiritual accessories sourced directly from holy temples. Each product is blessed and intended to address specific life concerns.
+
+**Customized Rituals**: Access professional pandits for customized pooja services and rituals designed to connect you spiritually and bring positive energy into your life.
+
+## Our Promise
+
+At Humara Pandit, we combine ancient traditions with modern technology to make spirituality accessible and meaningful. We are committed to authenticity, transparency, and helping you on your spiritual journey.
+
+Connect with us and experience the divine, the traditional way with a modern touch.`,
     packages: [
         {
             title: "Quick Session",

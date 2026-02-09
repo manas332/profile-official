@@ -5,9 +5,8 @@ import { AstroData, ConsultationPackage } from "@/lib/aws/astro";
 import { Input } from "@/components/ui/input";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, Plus, GripVertical } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import { saveAstroData } from "./astro-actions";
-import ProductUpload from "@/components/ProductUpload";
 
 interface AstrologerManagementProps {
     initialData: AstroData;
@@ -123,20 +122,14 @@ export default function AstrologerManagement({ initialData }: AstrologerManageme
                         />
                     </div>
                     <div>
-                        <label className="text-amber-200/60 text-sm block mb-2">Profile Photo (Upload New to Replace)</label>
+                        <label className="text-amber-200/60 text-sm block mb-2">Profile Photo URL</label>
                         <div className="flex gap-4 items-start">
                             {data.photoUrl && (
                                 <img src={data.photoUrl} alt="Current" className="w-24 h-32 object-cover rounded-lg border border-amber-900/30" />
                             )}
                             <div className="flex-1">
-                                <ProductUpload
-                                    initialData={null}
-                                    onSuccess={() => {
-                                        // Placeholder for image upload hook
-                                    }}
-                                />
                                 <Input
-                                    className="bg-neutral-900/50 border-amber-900/30 text-amber-100 mt-2"
+                                    className="bg-neutral-900/50 border-amber-900/30 text-amber-100"
                                     placeholder="Photo URL"
                                     value={data.photoUrl || ""}
                                     onChange={(e) => setData({ ...data, photoUrl: e.target.value })}
@@ -144,6 +137,26 @@ export default function AstrologerManagement({ initialData }: AstrologerManageme
                                 <p className="text-xs text-amber-200/40 mt-1">Enter CloudFront URL directly.</p>
                             </div>
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="bg-neutral-800 border-amber-900/30">
+                <CardHeader>
+                    <CardTitle className="text-amber-100">About Page Content</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <label className="text-amber-200/60 text-sm block mb-2">About Page Text</label>
+                        <p className="text-xs text-amber-200/40 mb-2">
+                            Use markdown-like formatting: # for main heading, ## for subheading, **text** for bold
+                        </p>
+                        <textarea
+                            className="w-full bg-neutral-900/50 border border-amber-900/30 text-amber-100 rounded-md p-3 min-h-[300px] mt-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50 font-mono text-sm"
+                            value={data.aboutContent || ""}
+                            onChange={(e) => setData({ ...data, aboutContent: e.target.value })}
+                            placeholder="# About Us&#10;&#10;Write your about page content here..."
+                        />
                     </div>
                 </CardContent>
             </Card>

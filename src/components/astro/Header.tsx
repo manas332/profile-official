@@ -63,10 +63,8 @@ export default function Header() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Services", href: "/#consultation-packages" },
-    { name: "Products", href: "/products" },
-    { name: "Profile", href: "/profile" },
-    { name: "About", href: "/#about" },
+    { name: "Products", href: "/astro/products" },
+    { name: "About", href: "/astro/about" },
   ];
 
   return (
