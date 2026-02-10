@@ -13,6 +13,8 @@ frontend:
         - env | grep -e APP_AWS_ >> .env.production || true
         - env | grep -e RESEND_API_KEY >> .env.production || true
         - env | grep -e ADMIN_PASSWORD >> .env.production || true
+        - env | grep -e RAZORPAY_KEY_ID >> .env.production || true
+        - env | grep -e RAZORPAY_KEY_SECRET >> .env.production || true
         - npm run build
   artifacts:
     baseDirectory: .next
