@@ -11,7 +11,7 @@ export default async function AdminLayout({
 
     // 1. Check if user is logged in
     if (!session || !session.user) {
-        redirect("/login");
+        redirect("/login?redirect=/admin");
     }
 
     // 2. Check email domain

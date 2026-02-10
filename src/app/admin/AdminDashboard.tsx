@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { adminStore, ConsultationPackage } from "@/lib/admin-store";
 import { Product } from "@/types/product";
 import Button from "@/components/ui/Button";
-import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { deleteProduct, getProducts } from "@/app/actions";
-import { Edit, LogOut, Package, Plus, ShoppingBag, Trash2, ExternalLink, User as UserIcon } from "lucide-react";
+import { Edit, LogOut, Plus, ShoppingBag, Trash2, User as UserIcon } from "lucide-react";
 import { logoutAdmin } from "./actions";
 import { useRouter } from "next/navigation";
 import ProductUpload from "@/components/ProductUpload";
@@ -18,7 +16,6 @@ import { fetchAstroData } from "./astro-actions";
 export default function AdminDashboard() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<"products" | "profile">("profile");
-    // const [packages, setPackages] = useState<ConsultationPackage[]>([]); // Deprecated
     const [products, setProducts] = useState<Product[]>([]);
     const [isAdding, setIsAdding] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -32,7 +29,6 @@ export default function AdminDashboard() {
     }, []);
 
     const refreshData = async () => {
-        // setPackages(adminStore.getPackages()); // Deprecated
 
         // Fetch products from DynamoDB
         const result = await getProducts();

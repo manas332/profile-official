@@ -3,6 +3,7 @@
 
 import { useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 
 export interface Package {
@@ -101,9 +102,11 @@ export default function ConsultationPackages({ packages }: { packages: Package[]
                   ))}
                 </ul>
 
-                <Button variant={pkg.popular ? "secondary" : "primary"} className="w-full">
-                  Select Plan
-                </Button>
+                <Link href="/consultation" className="block w-full">
+                  <Button variant={pkg.popular ? "secondary" : "primary"} className="w-full">
+                    Select Plan
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           ))}
@@ -188,9 +191,11 @@ export default function ConsultationPackages({ packages }: { packages: Package[]
                 </ul>
 
                 <div className="mt-4">
-                  <Button variant={pkg.popular ? "secondary" : "primary"} className="w-full">
-                    Select Plan
-                  </Button>
+                  <Link href="/consultation" className="block w-full">
+                    <Button variant={pkg.popular ? "secondary" : "primary"} className="w-full">
+                      Select Plan
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </motion.details>

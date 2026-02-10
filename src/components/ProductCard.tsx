@@ -12,7 +12,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-    const { addToCart } = useCart();
+    const { addToCart } = useCart()
 
     const [isAdded, setIsAdded] = React.useState(false);
 
@@ -24,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
     };
 
     return (
-        <Link href={`/products/${product.id}`} className="block group">
+        <Link href={`/astro/products/${product.id}`} className="block group">
             <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-amber-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-amber-300 relative">
                 {/* Image Container - Aspect 1:1 */}
                 <div className="relative aspect-square overflow-hidden bg-amber-50/30">

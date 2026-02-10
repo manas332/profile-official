@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, CheckCircle, CreditCard, Wallet, Truck } from "lucide-react";
 import Link from "next/link";
+import { loadRazorpayScript } from "@/lib/utils/razorpay-client";
 
 interface CheckoutFormProps {
     firstName: string;
@@ -36,8 +37,8 @@ const INDIAN_STATES = [
 export default function CheckoutPage() {
     const { cart, cartTotal, clearCart } = useCart();
     const router = useRouter();
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CheckoutFormProps>();
-    const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
+    const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm<CheckoutFormProps>();
+    const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
     const [paymentMethod, setPaymentMethod] = useState<'cod' | 'razorpay'>('cod');
     const [isProcessing, setIsProcessing] = useState(false);
     const [pincodeError, setPincodeError] = useState<string | null>(null);
@@ -70,7 +71,7 @@ export default function CheckoutPage() {
         }
     }, [pincodeValue, setValue]);
 
-    if (cart.length === 0 && step !== 'success') {
+    if (cart.length === 0) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
                 <h1 className="text-2xl font-serif text-slate-900 mb-4">Your cart is empty</h1>
@@ -87,46 +88,111 @@ export default function CheckoutPage() {
 
     const handlePlaceOrder = async () => {
         setIsProcessing(true);
-        // Simulate order placement
-        setTimeout(() => {
-            setIsProcessing(false);
-            setStep('success');
-            clearCart();
-        }, 2000);
-    };
 
-    if (step === 'success') {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center space-y-6">
-                    <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto animate-bounce-slow">
-                        <CheckCircle size={40} />
-                    </div>
-                    <div>
-                        <h2 className="text-3xl font-serif text-slate-900 mb-2">Order Confirmed!</h2>
-                        <p className="text-slate-500">
-                            May the blessings of the divine be with you. We have received your order request.
-                        </p>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 text-sm text-left space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">Order ID:</span>
-                            <span className="font-mono font-bold text-slate-900">#ORD-{Math.floor(Math.random() * 10000)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500">Estimated Delivery:</span>
-                            <span className="font-bold text-slate-900">3-5 Days</span>
-                        </div>
-                    </div>
-                    <Link href="/products" className="block">
-                        <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3">
-                            Continue Shopping
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-        );
-    }
+        if (paymentMethod === 'cod') {
+            // Handle COD (Implementation pending/simulated)
+            setTimeout(() => {
+                setIsProcessing(false);
+                clearCart();
+                router.push('/checkout/thank-you?orderId=COD-' + Math.floor(Math.random() * 10000));
+            }, 2000);
+            return;
+        }
+
+        // Razorpay Flow
+        try {
+            const isLoaded = await loadRazorpayScript();
+            if (!isLoaded) {
+                alert("Failed to load payment gateway. Please check your internet connection.");
+                setIsProcessing(false);
+                return;
+            }
+
+            const formData = getValues();
+
+            // Create Order
+            const response = await fetch("/api/razorpay/order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    amount: cartTotal,
+                    currency: "INR",
+                    type: "product",
+                    items: cart,
+                    shippingDetails: formData,
+                    userEmail: formData.email,
+                    userPhone: formData.phone,
+                    userName: `${formData.firstName} ${formData.lastName}`,
+                    astroId: "default" // Default astro for now
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                alert(data.error || "Something went wrong while creating order");
+                setIsProcessing(false);
+                return;
+            }
+
+            const options = {
+                key: data.keyId,
+                amount: data.amount,
+                currency: data.currency,
+                name: "Humara Pandit",
+                description: "Product Purchase",
+                order_id: data.orderId,
+                handler: async function (response: any) {
+                    // Verify Payment
+                    try {
+                        const verifyRes = await fetch("/api/razorpay/verify", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                dbOrderId: data.dbOrderId,
+                                type: "product"
+                            }),
+                        });
+
+                        const verifyData = await verifyRes.json();
+
+                        if (verifyData.success) {
+                            clearCart();
+                            router.push(`/checkout/thank-you?orderId=${data.dbOrderId}&paymentId=${response.razorpay_payment_id}`);
+                        } else {
+                            alert("Payment verification failed. Please contact support.");
+                        }
+                    } catch (error) {
+                        console.error("Verification Error:", error);
+                        alert("Payment verification failed.");
+                    }
+                },
+                prefill: {
+                    name: `${formData.firstName} ${formData.lastName}`,
+                    email: formData.email,
+                    contact: formData.phone,
+                },
+                theme: {
+                    color: "#d97706", // amber-600
+                },
+            };
+
+            const paymentObject = new (window as any).Razorpay(options);
+            paymentObject.open();
+            setIsProcessing(false); // Modal is open, we can stop processing state? Or keep it? keeping it false so button is clickable if they cancel. 
+            // Better to keep processing true until modal closes? Razorpay doesn't give clean onDismiss in standard config easily without modal config.
+            // But standard flow: user pays -> handler called.
+
+
+        } catch (error) {
+            console.error("Payment Error:", error);
+            alert("Something went wrong with payment.");
+            setIsProcessing(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6">

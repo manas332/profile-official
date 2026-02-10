@@ -138,9 +138,10 @@ export async function updateProduct(product: CreateProductInput & { id: string }
             pk: `PRODUCT#${product.id}`,
             sk: 'METADATA',
         },
-        UpdateExpression: 'set #name = :name, price = :price, description = :description, category = :category, imageUrl = :imageUrl, benefits = :benefits, zodiac = :zodiac, rashi = :rashi, chakra = :chakra, planet = :planet, element = :element, ritual = :ritual, isEnergized = :isEnergized, certification = :certification, updatedAt = :updatedAt',
+        UpdateExpression: 'set #name = :name, price = :price, description = :description, category = :category, imageUrl = :imageUrl, benefits = :benefits, zodiac = :zodiac, rashi = :rashi, chakra = :chakra, planet = :planet, #element = :element, ritual = :ritual, isEnergized = :isEnergized, certification = :certification, updatedAt = :updatedAt',
         ExpressionAttributeNames: {
             '#name': 'name',
+            '#element': 'element',
         },
         ExpressionAttributeValues: {
             ':name': product.name,
